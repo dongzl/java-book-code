@@ -7,5 +7,5 @@ package com.java.book.self.redis;
  */
 public enum CommandRedis {
 
-    SET, GET, SETNX
+    SET, GET, SETNX, ECHO
 }

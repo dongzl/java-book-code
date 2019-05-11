@@ -90,10 +90,32 @@ public class RedisClientByResp {
         return new String(b);
     }
 
+    /**
+     * echo
+     * @param value
+     * @return
+     * @throws Exception
+     */
+    public String echo(String value) throws Exception {
+        StringBuilder builder = new StringBuilder();
+        builder.append("*2").append("\r\n");
+        builder.append("$").append(CommandRedis.ECHO.name().length()).append("\r\n");
+        builder.append(CommandRedis.ECHO.name()).append("\r\n");
+        builder.append("$").append(value.getBytes().length).append("\r\n");
+        builder.append(value).append("\r\n");
+        System.out.println(builder.toString());
+
+        socket.getOutputStream().write(builder.toString().getBytes());
+        byte[] b = new byte[2048];
+        socket.getInputStream().read(b);
+        return new String(b);
+    }
+
     public static void main(String args[]) throws Exception {
         System.out.println(new RedisClientByResp().set("mykey", "myvalue1"));
         System.out.println(new RedisClientByResp().get("mykey"));
         System.out.println(new RedisClientByResp().setnx("mykey1", "myvalue2"));
         System.out.println(new RedisClientByResp().get("mykey"));
+        System.out.println(new RedisClientByResp().echo("Hello World!"));
     }
 }
