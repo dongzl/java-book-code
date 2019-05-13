@@ -25,6 +25,8 @@ public class Test {
         int a = 1 << 4;
         System.out.println(a);
         Map<String, String> map = new HashMap<>();
+        map.put("a", "a");
+        map.get("a");
         Map<String, String> map1 = new LinkedHashMap<>(0);
         Map<String, String> map2 = new TreeMap<>();
         Hashtable<String, String> hashtable = new Hashtable<>();
