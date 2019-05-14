@@ -24,25 +24,40 @@ public class Test {
     }
 
     public static void main(String args[]) throws Exception {
-        final Test test = new Test();
-        test.set();
-        
-        System.out.println(test.getLong());
-        System.out.println(test.getString());
+//        final Test test = new Test();
+//        test.set();
+//
+//        System.out.println(test.getLong());
+//        System.out.println(test.getString());
+//
+//        Thread thread1 = new Thread() {
+//            @Override
+//            public void run() {
+//                test.set();
+//                System.out.println(test.getLong());
+//                System.out.println(test.getString());
+//            }
+//        };
+//
+//        thread1.start();
+//        thread1.join();
+//
+//        System.out.println(test.getLong());
+//        System.out.println(test.getString());
 
-        Thread thread1 = new Thread() {
+        final ThreadLocal threadLocal=new ThreadLocal(){
             @Override
-            public void run() {
-                test.set();
-                System.out.println(test.getLong());
-                System.out.println(test.getString());
+            protected Object initialValue() {
+                return "dongzonglei";
             }
         };
 
-        thread1.start();
-        thread1.join();
-
-        System.out.println(test.getLong());
-        System.out.println(test.getString());
+        threadLocal.set("dongzonglei_test");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(threadLocal.get());//NULL
+            }
+        }).start();
     }
 }
