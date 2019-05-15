@@ -36,5 +36,8 @@ public class Test {
         Set<String> set = new HashSet<>();
         Set<String> set1 = new LinkedHashSet<>();
         Set<String> set2 = new TreeSet<>();
+        System.out.println(-2 >>> 1);
+        System.out.println(Integer.toHexString(-2));
+        System.out.println(2 >>> 1);
     }
 }
