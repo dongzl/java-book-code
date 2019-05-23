@@ -39,5 +39,21 @@ public class Test {
         System.out.println(-2 >>> 1);
         System.out.println(Integer.toHexString(-2));
         System.out.println(2 >>> 1);
+        System.out.println(Integer.parseInt("0001111", 2) & 15);
+        System.out.println(Integer.parseInt("0011111", 2) & 15);
+        System.out.println(Integer.parseInt("0111111", 2) & 15);
+        System.out.println(Integer.parseInt("1111111", 2) & 15);
+
+        System.out.println(Integer.parseInt("01010101010101010101010100001111", 2) >> 16 & 15);
+        System.out.println(Integer.parseInt("01011101110111010101010100011111", 2) >> 16 & 15);
+        System.out.println(Integer.parseInt("01010101011100010101010100111111", 2) >> 16 & 15);
+        System.out.println(Integer.parseInt("01110001010101010101010101111111", 2) >> 16 & 15);
+
+        int initialCapacity = 10;
+        int cap = initialCapacity + (initialCapacity >>> 1) + 1;
+        System.out.println(cap);
+        initialCapacity = 11;
+        cap = initialCapacity + (initialCapacity >>> 1) + 1;
+        System.out.println(cap);
     }
 }
