@@ -908,9 +908,13 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      */
     public int size() {
         long n = sumCount();
-        return ((n < 0L) ? 0 :
-                (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
-                        (int)n);
+        if (n < 0) {
+            return 0;
+        }
+        if (n > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        return (int)n;
     }
 
     /**
@@ -1022,40 +1026,42 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /** Implementation for put and putIfAbsent */
     final V putVal(K key, V value, boolean onlyIfAbsent) {
-        if (key == null || value == null) throw new NullPointerException();
+        if (key == null || value == null) {
+            throw new NullPointerException();
+        }
         int hash = spread(key.hashCode());
         int binCount = 0;
-        for (Node<K,V>[] tab = table;;) {
-            Node<K,V> f; int n, i, fh;
-            if (tab == null || (n = tab.length) == 0)
+        for (Node<K,V>[] tab = table; ;) {
+            Node<K,V> f;
+            int n;
+            int i;
+            int fh;
+            if (tab == null || (n = tab.length) == 0) {
                 tab = initTable();
-            else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
-                if (casTabAt(tab, i, null,
-                        new Node<K,V>(hash, key, value, null)))
-                    break;                   // no lock when adding to empty bin
-            }
-            else if ((fh = f.hash) == MOVED)
+            } else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+                if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value, null))) {
+                    break; // no lock when adding to empty bin
+                }
+            } else if ((fh = f.hash) == MOVED) {
                 tab = helpTransfer(tab, f);
-            else {
+            } else {
                 V oldVal = null;
                 synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         if (fh >= 0) {
                             binCount = 1;
-                            for (Node<K,V> e = f;; ++binCount) {
+                            for (Node<K,V> e = f; ; ++binCount) {
                                 K ek;
-                                if (e.hash == hash &&
-                                        ((ek = e.key) == key ||
-                                                (ek != null && key.equals(ek)))) {
+                                if (e.hash == hash && ((ek = e.key) == key || (ek != null && key.equals(ek)))) {
                                     oldVal = e.val;
-                                    if (!onlyIfAbsent)
+                                    if (!onlyIfAbsent) {
                                         e.val = value;
+                                    }
                                     break;
                                 }
                                 Node<K,V> pred = e;
                                 if ((e = e.next) == null) {
-                                    pred.next = new Node<K,V>(hash, key,
-                                            value, null);
+                                    pred.next = new Node<K,V>(hash, key, value, null);
                                     break;
                                 }
                             }
@@ -1066,17 +1072,20 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                             if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,
                                     value)) != null) {
                                 oldVal = p.val;
-                                if (!onlyIfAbsent)
+                                if (!onlyIfAbsent) {
                                     p.val = value;
+                                }
                             }
                         }
                     }
                 }
                 if (binCount != 0) {
-                    if (binCount >= TREEIFY_THRESHOLD)
+                    if (binCount >= TREEIFY_THRESHOLD) {
                         treeifyBin(tab, i);
-                    if (oldVal != null)
+                    }
+                    if (oldVal != null) {
                         return oldVal;
+                    }
                     break;
                 }
             }
@@ -2523,12 +2532,15 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     }
 
     final long sumCount() {
-        CounterCell[] as = counterCells; CounterCell a;
+        CounterCell[] as = counterCells;
+        CounterCell a;
         long sum = baseCount;
         if (as != null) {
             for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null)
+                a = as[i];
+                if (a != null) {
                     sum += a.value;
+                }
             }
         }
         return sum;

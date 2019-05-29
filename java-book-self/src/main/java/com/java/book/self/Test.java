@@ -55,5 +55,20 @@ public class Test {
         initialCapacity = 11;
         cap = initialCapacity + (initialCapacity >>> 1) + 1;
         System.out.println(cap);
+
+        // 二进制：01111111111111111111111111111111
+        final int HASH_BITS = 0x7fffffff; // usable bits of normal node hash
+        System.out.println(HASH_BITS);
+        System.out.println("  0" + Integer.toBinaryString(Integer.valueOf(HASH_BITS)));
+
+        int h = Integer.parseInt("01010101010101010101010100001111", 2);
+        System.out.println("a 0" + Integer.toBinaryString(h));
+        int temp = h >>> 16;
+        System.out.println("b 00000000000000000" + Integer.toBinaryString(temp));
+        temp = h ^ temp;
+        System.out.println("c 0" + Integer.toBinaryString(temp));
+        temp = temp & HASH_BITS;
+        System.out.println("d 0" + Integer.toBinaryString(temp));
+        System.out.println("e 0" + Integer.toBinaryString((h ^ (h >>> 16)) & HASH_BITS));
     }
 }
