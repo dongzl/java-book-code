@@ -29,6 +29,9 @@ public class Test {
         map.get("a");
         Map<String, String> map1 = new LinkedHashMap<>(0);
         Map<String, String> map2 = new TreeMap<>();
+        // error NEP
+        //map2.put(null, null);
+        map2.put("a", null);
         Hashtable<String, String> hashtable = new Hashtable<>();
         List<String> list = new ArrayList<>();
         List<String> lista = new LinkedList<>();
