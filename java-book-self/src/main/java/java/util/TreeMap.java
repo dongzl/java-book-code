@@ -2167,16 +2167,20 @@ public class TreeMap<K,V>
 
     /**
      * Returns the successor of the specified Entry, or null if no such.
+     * 返回后继节点
      */
     static <K,V> TreeMap.Entry<K,V> successor(Entry<K,V> t) {
         if (t == null)
             return null;
         else if (t.right != null) {
+            // 如果右子书不为空，后续节点为右子树的最左节点
+            // 因为“最左子树”是右子树的最小节点
             Entry<K,V> p = t.right;
             while (p.left != null)
                 p = p.left;
             return p;
         } else {
+            // 如果右子树为空，则寻找当前节点所在左子树的第一个祖先节点
             Entry<K,V> p = t.parent;
             Entry<K,V> ch = t;
             while (p != null && ch == p.right) {
