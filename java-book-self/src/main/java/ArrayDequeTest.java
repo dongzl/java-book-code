@@ -11,6 +11,8 @@ public class ArrayDequeTest {
         ArrayDeque<String> deque = new ArrayDeque();
         deque.add("a");
         deque.addFirst("b");
+//        deque.addFirst(null);
+        System.out.println(deque.offerFirst(null));
         System.out.println(deque.toString());
     }
 }

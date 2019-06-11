@@ -142,6 +142,11 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     // ******  Array allocation and resizing utilities ******
 
+    /**
+     * 通过多次无符号右移操作，最后找出大于 numElements 的最小的 2 的 n 次幂的值。
+     * @param numElements
+     * @return
+     */
     private static int calculateSize(int numElements) {
         int initialCapacity = MIN_INITIAL_CAPACITY;
         // Find the best power of two to hold elements.
@@ -173,17 +178,24 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Doubles the capacity of this deque.  Call only when full, i.e.,
      * when head and tail have wrapped around to become equal.
+     *
+     * 如果 head == tail，说明 deque 满了，需要进行扩容，扩容为原来的 2 倍。
+     *
      */
     private void doubleCapacity() {
         assert head == tail;
         int p = head;
         int n = elements.length;
         int r = n - p; // number of elements to the right of p
+        //右移一位，扩容为原来 2 倍
         int newCapacity = n << 1;
         if (newCapacity < 0)
             throw new IllegalStateException("Sorry, deque too big");
         Object[] a = new Object[newCapacity];
+        //(Object src,  int  srcPos, Object dest, int destPos, int length);
+        //复制 head 后面的元素
         System.arraycopy(elements, p, a, 0, r);
+        //复制 head 前面的元素
         System.arraycopy(elements, 0, a, r, p);
         elements = a;
         head = 0;
