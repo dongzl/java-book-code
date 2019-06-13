@@ -10,9 +10,12 @@ public class ArrayDequeTest {
     public static void main(String args[]) throws Exception {
         ArrayDeque<String> deque = new ArrayDeque();
         deque.add("a");
-        deque.addFirst("b");
+        deque.add("b");
+        deque.add("c");
+        deque.add("d");
+        deque.removeFirstOccurrence("c");
 //        deque.addFirst(null);
-        System.out.println(deque.offerFirst(null));
+//        System.out.println(deque.offerFirst(null));
         System.out.println(deque.toString());
     }
 }

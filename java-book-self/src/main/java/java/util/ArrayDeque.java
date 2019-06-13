@@ -256,6 +256,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     // The main insertion and extraction methods are addFirst,
     // addLast, pollFirst, pollLast. The other methods are defined in
     // terms of these.
+    // 主要的插入和取出操作方法是 addFirst、addLast、pollFirst、pollLast。
+    // 其他方法都是在这些方法的基础上衍生出来的。
 
     /**
      * Inserts the specified element at the front of this deque.
