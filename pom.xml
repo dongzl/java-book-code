@@ -15,6 +15,8 @@
 
     <modules>
         <module>java-book-self</module>
+        <module>java-code-comment</module>
+        <module>effective-java-code</module>
     </modules>
 
     <build>
