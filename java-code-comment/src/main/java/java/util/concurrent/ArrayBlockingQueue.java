@@ -73,7 +73,10 @@ import java.util.Spliterator;
  * to {@code true} grants threads access in FIFO order. Fairness
  * generally decreases throughput but reduces variability and avoids
  * starvation.
- * 1、
+ * 1、支持公平 & 非公平策略
+ * 2、默认情况下，是不保证顺序的
+ * 3、如果构造函数中 fairness 参数为 true，是可以保证 FIFO 顺序的
+ * 4、使用公平策略通常会降低吞吐量，但是可以降低可变性、避免饥饿。
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -170,6 +173,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (++putIndex == items.length)
             putIndex = 0;
         count++;
+        //唤醒非空等待队列中的线程
         notEmpty.signal();
     }
 
@@ -244,6 +248,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException if {@code capacity < 1}
      */
     public ArrayBlockingQueue(int capacity) {
+        //默认构造非公平锁的阻塞队列
         this(capacity, false);
     }
 
@@ -261,8 +266,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (capacity <= 0)
             throw new IllegalArgumentException();
         this.items = new Object[capacity];
+        //初始化可重入锁。出入队列拥有同一个锁
         lock = new ReentrantLock(fair);
+        //初始化非空等待队列
         notEmpty = lock.newCondition();
+        //初始化非满等待队列
         notFull =  lock.newCondition();
     }
 
@@ -287,17 +295,20 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         this(capacity, fair);
 
         final ReentrantLock lock = this.lock;
+        //这里加锁是为了保证可见性，并不是互斥
         lock.lock(); // Lock only for visibility, not mutual exclusion
         try {
             int i = 0;
             try {
                 for (E e : c) {
                     checkNotNull(e);
+                    //将集合添加进数组构成的队列中
                     items[i++] = e;
                 }
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new IllegalArgumentException();
             }
+            //队列中的实际数据数量
             count = i;
             putIndex = (i == capacity) ? 0 : i;
         } finally {
@@ -326,17 +337,22 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * returning {@code true} upon success and {@code false} if this queue
      * is full.  This method is generally preferable to method {@link #add},
      * which can fail to insert an element only by throwing an exception.
+     * 1、插入元素，立即返回结果。
+     * 2、插入成功 true，插入失败 false，表示队列已满。
      *
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
         checkNotNull(e);
         final ReentrantLock lock = this.lock;
+        //获取锁，线程安全
         lock.lock();
         try {
+            //线程满时，直接返回
             if (count == items.length)
                 return false;
             else {
+                //队列未满，直接添加元素
                 enqueue(e);
                 return true;
             }
@@ -355,10 +371,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public void put(E e) throws InterruptedException {
         checkNotNull(e);
         final ReentrantLock lock = this.lock;
+        //这里并没有调用lock方法，而是调用了可被中断的lockInterruptibly，该方法可被线程中断返回，lock不能被中断返回。
         lock.lockInterruptibly();
         try {
+            //当队列满时，使非满等待队列休眠
             while (count == items.length)
                 notFull.await();
+            //此时表示队列非满，故插入元素，同时在该方法里唤醒非空等待队列
             enqueue(e);
         } finally {
             lock.unlock();
