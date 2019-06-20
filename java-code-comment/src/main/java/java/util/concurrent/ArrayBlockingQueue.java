@@ -193,6 +193,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         count--;
         if (itrs != null)
             itrs.elementDequeued();
+        //唤醒非满等待队列线程
         notFull.signal();
         return x;
     }
@@ -416,6 +417,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
+            //有元素返回元素，没有元素返回null
             return (count == 0) ? null : dequeue();
         } finally {
             lock.unlock();
@@ -424,10 +426,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     public E take() throws InterruptedException {
         final ReentrantLock lock = this.lock;
+        //这里并没有调用lock方法，而是调用了可被中断的lockInterruptibly，该方法可被线程中断返回，lock不能被中断返回。
         lock.lockInterruptibly();
         try {
+            //有元素返回元素，没有元素一直阻塞
             while (count == 0)
+                //非空等待队列休眠
                 notEmpty.await();
+            //此时表示队列非空，故删除元素，同时在里唤醒非满等待队列
             return dequeue();
         } finally {
             lock.unlock();
@@ -439,6 +445,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
+            //等待某一个时间
             while (count == 0) {
                 if (nanos <= 0)
                     return null;
@@ -454,6 +461,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
+            //返回阻塞队列第一个元素
             return itemAt(takeIndex); // null when queue is empty
         } finally {
             lock.unlock();
@@ -484,11 +492,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * (in the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue
      * less the current {@code size} of this queue.
+     * 1、这始终等于此队列的初始容量减去此队列的当前{@code size}。
      *
      * <p>Note that you <em>cannot</em> always tell if an attempt to insert
      * an element will succeed by inspecting {@code remainingCapacity}
      * because it may be the case that another thread is about to
      * insert or remove an element.
+     * 1、不能通过这个方法判断插入元素是否成功
+     * 2、因为有可能其他线程进行了插入或者删除元素操作
      */
     public int remainingCapacity() {
         final ReentrantLock lock = this.lock;
@@ -545,6 +556,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Returns {@code true} if this queue contains the specified element.
      * More formally, returns {@code true} if and only if this queue contains
      * at least one element {@code e} such that {@code o.equals(e)}.
+     * 1、至少包含一次该元素
      *
      * @param o object to be checked for containment in this queue
      * @return {@code true} if this queue contains the specified element
@@ -556,14 +568,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             if (count > 0) {
-                final int putIndex = this.putIndex;
-                int i = takeIndex;
+                final int putIndex = this.putIndex;//插入元素位置
+                int i = takeIndex; //获取元素位置
                 do {
                     if (o.equals(items[i]))
                         return true;
                     if (++i == items.length)
                         i = 0;
-                } while (i != putIndex);
+                } while (i != putIndex);//循环到相等结束退出
             }
             return false;
         } finally {
