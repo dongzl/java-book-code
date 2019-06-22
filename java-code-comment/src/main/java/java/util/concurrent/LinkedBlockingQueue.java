@@ -265,6 +265,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a {@code LinkedBlockingQueue} with the given (fixed) capacity.
+     * 创建指定容量的LinkedBlockingQueue队列
      *
      * @param capacity the capacity of this queue
      * @throws IllegalArgumentException if {@code capacity} is not greater
@@ -281,6 +282,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * {@link Integer#MAX_VALUE}, initially containing the elements of the
      * given collection,
      * added in traversal order of the collection's iterator.
+     * 创建队列，容量为默认的 Integer.MAX_VALUE
+     * 将参数集合中元素加入到队列中
      *
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if the specified collection or any
@@ -326,11 +329,14 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * (in the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue
      * less the current {@code size} of this queue.
+     * 返回不出现阻塞的理想情况下这个队列可以添加元素的个数（不考虑内存或者是资源限制），这等于队列初始容量 - 队列已添加元素个数
      *
      * <p>Note that you <em>cannot</em> always tell if an attempt to insert
      * an element will succeed by inspecting {@code remainingCapacity}
      * because it may be the case that another thread is about to
      * insert or remove an element.
+     * 不能够通过remainingCapacity的结果来判断是否添加元素成功，因为有可能有其他线程同时进行了插入或删除元素操作
+     *
      */
     public int remainingCapacity() {
         return capacity - count.get();
@@ -339,6 +345,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue, waiting if
      * necessary for space to become available.
+     * 在队列末尾添加元素，如果没有可用空间，会出现阻塞直到有可用空间。
      *
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
@@ -351,6 +358,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         Node<E> node = new Node<E>(e);
         final ReentrantLock putLock = this.putLock;
         final AtomicInteger count = this.count;
+        //获取putLock锁，该锁是可以中断的
+
         putLock.lockInterruptibly();
         try {
             /*
@@ -361,10 +370,20 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
              * signalled if it ever changes from capacity. Similarly
              * for all other uses of count in other wait guards.
              */
+            /* count值用来判断是否需要等待操作，虽然他没有被锁保护。
+               这种情况是有效的，因为count在此时只能减少（所有其他导致count值增加的put操作都在等待锁资源），
+               此时如果容量发生变化，所有其他等待锁资源的put操作都会被通知到。
+               同样的，count值也有很多用途，用来判断是否需要等待操作.
+             */
+
             while (count.get() == capacity) {
+                //如果容量已满，notFull await
                 notFull.await();
             }
+            //有可用容量，添加元素
             enqueue(node);
+            //count值加 1
+            //这里为什么不是 count.incrementAndGet() ？？
             c = count.getAndIncrement();
             if (c + 1 < capacity)
                 notFull.signal();
@@ -378,6 +397,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
+     * 在队列的末尾添加元素
+     * 如果出现阻塞情况，等待指定时间
      *
      * @return {@code true} if successful, or {@code false} if
      *         the specified waiting time elapses before space is available
