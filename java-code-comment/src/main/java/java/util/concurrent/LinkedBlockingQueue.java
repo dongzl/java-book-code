@@ -437,6 +437,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * possible to do so immediately without exceeding the queue's capacity,
      * returning {@code true} upon success and {@code false} if this queue
      * is full.
+     * 1、在队列尾部插入指定元素
+     * 2、如果队列未满可以立即插入，插入成功 返回true
+     * 3、如果队列已满无法立即插入，插入失败，返回false
+     *
      * When using a capacity-restricted queue, this method is generally
      * preferable to method {@link BlockingQueue#add add}, which can fail to
      * insert an element only by throwing an exception.
@@ -444,24 +448,37 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
+        // 插入元素不允许为null
         if (e == null) throw new NullPointerException();
+        //队列当前已经存在的元素个数
         final AtomicInteger count = this.count;
+        //队列已满，直接返回false
         if (count.get() == capacity)
             return false;
         int c = -1;
+        // 容量未满，构造新节点元素
         Node<E> node = new Node<E>(e);
         final ReentrantLock putLock = this.putLock;
+        //获取putLock锁，保证调用offer方法的时候只有1个线程
         putLock.lock();
         try {
+            //再次判断容量，可能有takeLock在消费数据，容量未满继续执行
+            //有可能在（count.get() == capacity）和加锁之间有其他线程offer了数据
             if (count.get() < capacity) {
+                //队尾插入元素
                 enqueue(node);
+                //元素个数 + 1 这里返回的是 + 1前的旧数据（如果是count.incrementAndGet()则返回的是 + 1后的新数据）
                 c = count.getAndIncrement();
+                //如果容量未满，可以继续添加元素
                 if (c + 1 < capacity)
+                    //在putLock的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满
                     notFull.signal();
             }
         } finally {
+            //释放putLock，让其他线程可以调用offer方法
             putLock.unlock();
         }
+        //由于存在putLock和takeLock，这里可能takeLock一直在消费数据，count会发生变化，这里的if条件表示队列中还有一条元素
         if (c == 0)
             signalNotEmpty();
         return c >= 0;
@@ -516,23 +533,34 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     public E poll() {
         final AtomicInteger count = this.count;
+        //如果元素个数为0，直接返回null
         if (count.get() == 0)
             return null;
         E x = null;
         int c = -1;
         final ReentrantLock takeLock = this.takeLock;
+        //takeLock加锁，保证调用poll方法的时候只有1个线程
         takeLock.lock();
         try {
+            //再次判断队列里是否有数据，因为在前面判断（count.get() == 0）和加锁之间可能有其他线程poll了元素
             if (count.get() > 0) {
+                //删除头元素
                 x = dequeue();
+                //元素个数 - 1
+                //这里返回的是 - 1前的旧数据（如果是count.decrementAndGet()则返回的是 - 1后的新数据）
                 c = count.getAndDecrement();
+                //如果队列里还有元素
                 if (c > 1)
+                    //在takeLock的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费
                     notEmpty.signal();
             }
         } finally {
+            //释放takeLock，让其他线程可以调用poll方法
             takeLock.unlock();
         }
+        //由于存在putLock和takeLock，这里可能putLock一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据
         if (c == capacity)
+            //在putLock的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据
             signalNotFull();
         return x;
     }
