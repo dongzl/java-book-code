@@ -128,6 +128,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Default array capacity.
+     *
+     * 默认队列容量
+     *
      */
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 
@@ -136,6 +139,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Some VMs reserve some header words in an array.
      * Attempts to allocate larger arrays may result in
      * OutOfMemoryError: Requested array size exceeds VM limit
+     * 队列最大分配容量
+     * 有一些VM需要保留数组的头部信息，所以要 - 8
+     * 如果要分配更大的队列容量，可能会导致OutOfMemoryError
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
@@ -146,32 +152,46 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * natural ordering, if comparator is null: For each node n in the
      * heap and each descendant d of n, n <= d.  The element with the
      * lowest value is in queue[0], assuming the queue is nonempty.
+     * 1、Priority queue实现是一个平衡二叉堆
+     * 2、父节点序号为n，左子树序号为 2 * n + 1，右子树序号为：2 * (n + 1)
+     * 3、priority queue 元素根据comparator进行排序，或者根据自然顺序排序
+     * 4、对于每一个节点 n 和他的子孙节点 d，一定有 n <= d
+     * 5、如果队列不为空，那么队列中最小的元素为 queue[0]
+     *
      */
     private transient Object[] queue;
 
     /**
      * The number of elements in the priority queue.
+     *
+     * 队列中元素个数
      */
     private transient int size;
 
     /**
      * The comparator, or null if priority queue uses elements'
      * natural ordering.
+     *
+     * 队列元素比较器，如果为空，按照元素自然顺序排序。
      */
     private transient Comparator<? super E> comparator;
 
     /**
      * Lock used for all public operations
+     *
+     * 所有public方法使用的锁
      */
     private final ReentrantLock lock;
 
     /**
      * Condition for blocking when empty
+     * 当队列为空是锁的条件信息
      */
     private final Condition notEmpty;
 
     /**
      * Spinlock for allocation, acquired via CAS.
+     * 该int值配合unsafe类实现了一个同步用的自旋锁
      */
     private transient volatile int allocationSpinLock;
 
@@ -179,6 +199,10 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * A plain PriorityQueue used only for serialization,
      * to maintain compatibility with previous versions
      * of this class. Non-null only during serialization/deserialization.
+     *
+     * 为了兼容老代码在序列化和反序列化时使用的队列，只有在序列化/反序列化时该队列中才有值。
+     * 可以看到前面用于保存元素的queue被transient修饰，因此序列化时只能通过该对象q
+     *
      */
     private PriorityQueue<E> q;
 
