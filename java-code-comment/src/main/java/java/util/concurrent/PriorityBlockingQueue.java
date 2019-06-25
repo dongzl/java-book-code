@@ -329,30 +329,48 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param oldCap the length of the array
      */
     private void tryGrow(Object[] array, int oldCap) {
+        //必须要释放锁，否则会阻塞出队操作
         lock.unlock(); // must release and then re-acquire main lock
         Object[] newArray = null;
+        // 加锁，变更allocationSpinLock的值为1；
         if (allocationSpinLock == 0 &&
                 UNSAFE.compareAndSwapInt(this, allocationSpinLockOffset,
                         0, 1)) {
             try {
+                // oldCap < 64 : newCap = 2 * oldCap + 2  grow faster if small
+                // oldCap >= 64 : newCap = 1.5 * oldCap
                 int newCap = oldCap + ((oldCap < 64) ?
                         (oldCap + 2) : // grow faster if small
                         (oldCap >> 1));
+                //newCap 太大 可能要内存溢出
                 if (newCap - MAX_ARRAY_SIZE > 0) {    // possible overflow
                     int minCap = oldCap + 1;
-                    if (minCap < 0 || minCap > MAX_ARRAY_SIZE)
+                    // 只扩容增加一个容量，如果越界（minCap < 0）或者 > MAX_ARRAY_SIZE
+                    // 没有办法，只能 OutOfMemoryError
+                    if (minCap < 0 || minCap > MAX_ARRAY_SIZE) {
                         throw new OutOfMemoryError();
+                    }
+                    //否则的话就让扩容后的 newCap = 最大容量
                     newCap = MAX_ARRAY_SIZE;
                 }
+                //成功扩容，开辟新的数组空间存放队列元素
                 if (newCap > oldCap && queue == array)
                     newArray = new Object[newCap];
             } finally {
+                // 解锁，因为只有一个线程到此，因而不需要CAS操作；
                 allocationSpinLock = 0;
             }
         }
+
+        // allocationSpinLock == 0 &&
+        //                UNSAFE.compareAndSwapInt(this, allocationSpinLockOffset,
+        //                        0, 1)
+        // false 加锁失败，会导致这里的newArray为空，说明有其他线程在执行扩容操作
+
         if (newArray == null) // back off if another thread is allocating
             Thread.yield();
         lock.lock();
+        // 加锁，替换现有数组的引用，拷贝数组元素；
         if (newArray != null && queue == array) {
             queue = newArray;
             System.arraycopy(array, 0, newArray, 0, oldCap);
