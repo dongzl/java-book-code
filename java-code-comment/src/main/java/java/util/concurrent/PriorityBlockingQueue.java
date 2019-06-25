@@ -192,6 +192,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Spinlock for allocation, acquired via CAS.
      * 该int值配合unsafe类实现了一个同步用的自旋锁
+     * 自旋锁标识字段，通过CAS操作进行比较更新；
+     * 用于动态扩容操作；值为1时，表示加锁；为0时，标识未加锁；
      */
     private transient volatile int allocationSpinLock;
 
@@ -210,6 +212,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Creates a {@code PriorityBlockingQueue} with the default
      * initial capacity (11) that orders its elements according to
      * their {@linkplain Comparable natural ordering}.
+     *
+     * 1、创建默认容量的队列，默认 11
+     * 2、根据元素的自然顺序排序
      */
     public PriorityBlockingQueue() {
         this(DEFAULT_INITIAL_CAPACITY, null);
@@ -219,6 +224,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Creates a {@code PriorityBlockingQueue} with the specified
      * initial capacity that orders its elements according to their
      * {@linkplain Comparable natural ordering}.
+     *
+     * 1、创建指定容量队列
+     * 2、根据元素的自然顺序排序
      *
      * @param initialCapacity the initial capacity for this priority queue
      * @throws IllegalArgumentException if {@code initialCapacity} is less
@@ -232,6 +240,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Creates a {@code PriorityBlockingQueue} with the specified initial
      * capacity that orders its elements according to the specified
      * comparator.
+     *
+     * 1、创建指定容量队列
+     * 2、根据 comparator 参数进行排序
      *
      * @param initialCapacity the initial capacity for this priority queue
      * @param  comparator the comparator that will be used to order this
@@ -258,6 +269,10 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Otherwise, this priority queue will be ordered according to the
      * {@linkplain Comparable natural ordering} of its elements.
      *
+     * 1、根据集合参数创建队列
+     * 2、如果集合参数是 SortedSet | PriorityQueue 类型，队列排序规则会集合保持一致
+     * 3、如果不是上述两种集合类型，使用集合元素的自然顺序排序
+     *
      * @param  c the collection whose elements are to be placed
      *         into this priority queue
      * @throws ClassCastException if elements of the specified collection
@@ -271,11 +286,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         this.notEmpty = lock.newCondition();
         boolean heapify = true; // true if not known to be in heap order
         boolean screen = true;  // true if must screen for nulls
+        // 如果传入集合是有序集，则无须进行堆有序化
         if (c instanceof SortedSet<?>) {
             SortedSet<? extends E> ss = (SortedSet<? extends E>) c;
             this.comparator = (Comparator<? super E>) ss.comparator();
             heapify = false;
         }
+        // https://yq.aliyun.com/articles/577859
+        // 如果传入集合是PriorityBlockingQueue类型，则不进行堆有序化
         else if (c instanceof PriorityBlockingQueue<?>) {
             PriorityBlockingQueue<? extends E> pq =
                     (PriorityBlockingQueue<? extends E>) c;
@@ -296,6 +314,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
         this.queue = a;
         this.size = n;
+        // 执行堆有序化
         if (heapify)
             heapify();
     }
@@ -474,8 +493,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * add：队列满时抛出异常；由于为无界队列，因而不会抛出异常；代码实现直接调用 offer 方法；
+     * offer：队列满时返回 false；由于为无界队列，因而不会返回 false；
+     * offer带超时参数：队列满时阻塞等待直至超时或者数组有空出位置；由于为无界队列，因而不会返回 false、超时、阻塞；代码实现直接调用 offer 方法；
+     * put：队列满时阻塞；由于为无界队列，因而不会阻塞；代码实现直接调用 offer 方法；
+     */
+
+    /**
      * Inserts the specified element into this priority queue.
-     *
      * @param e the element to add
      * @return {@code true} (as specified by {@link Collection#add})
      * @throws ClassCastException if the specified element cannot be compared
@@ -501,12 +526,17 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     public boolean offer(E e) {
         if (e == null)
             throw new NullPointerException();
+        // 加锁
         final ReentrantLock lock = this.lock;
         lock.lock();
+
+        // 通过CAS操作动态扩容
         int n, cap;
         Object[] array;
-        while ((n = size) >= (cap = (array = queue).length))
+        while ((n = size) >= (cap = (array = queue).length)) {
             tryGrow(array, cap);
+        }
+        // 将新增元素上浮到合适位置
         try {
             Comparator<? super E> cmp = comparator;
             if (cmp == null)
@@ -514,6 +544,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             else
                 siftUpUsingComparator(n, e, array, cmp);
             size = n + 1;
+            // 唤醒阻塞线程
             notEmpty.signal();
         } finally {
             lock.unlock();
@@ -553,6 +584,15 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     public boolean offer(E e, long timeout, TimeUnit unit) {
         return offer(e); // never need to block
     }
+
+
+    /**
+     * dequeue：出队操作的具体实现，为保证线程安全，上层调用方法需要加锁；
+     * take：队列为空时，阻塞直至有元素添加到队列中；
+     * poll：队列为空时，直接返回 null，不会阻塞；
+     * poll带超时参数：队列为空时，阻塞直至超时或者有元素添加到队列中；
+     * drainTo：批量从队首弹出元素到指定集合中，不会阻塞；
+     */
 
     public E poll() {
         final ReentrantLock lock = this.lock;
@@ -627,6 +667,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Always returns {@code Integer.MAX_VALUE} because
      * a {@code PriorityBlockingQueue} is not capacity constrained.
+     *
+     * m没有容量限制，所以永远返回 Integer.MAX_VALUE
+     *
      * @return {@code Integer.MAX_VALUE} always
      */
     public int remainingCapacity() {
@@ -677,7 +720,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * elements.  Returns {@code true} if and only if this queue contained
      * the specified element (or equivalently, if this queue changed as a
      * result of the call).
-     *
+     * 1、在队列中删除指定元素（该元素存在）
+     * 2、如果存在多个相同元素，只会删除第一个
      * @param o element to be removed from this queue, if present
      * @return {@code true} if this queue changed as a result of the call
      */
@@ -718,6 +762,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Returns {@code true} if this queue contains the specified element.
      * More formally, returns {@code true} if and only if this queue contains
      * at least one element {@code e} such that {@code o.equals(e)}.
+     * 1、判断队列是否包含指定元素
      *
      * @param o object to be checked for containment in this queue
      * @return {@code true} if this queue contains the specified element
