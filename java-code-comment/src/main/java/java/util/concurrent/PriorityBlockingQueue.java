@@ -379,6 +379,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Mechanics for poll().  Call only while holding lock.
+     *
+     * 出队队首第一个元素
+     *
      */
     private E dequeue() {
         int n = size - 1;
@@ -386,29 +389,43 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             return null;
         else {
             Object[] array = queue;
+            // 出队元素 队首第一个元素
             E result = (E) array[0];
+            // 队尾元素
             E x = (E) array[n];
+            // 队尾元素设置为null，数组长度 - 1
             array[n] = null;
             Comparator<? super E> cmp = comparator;
-            if (cmp == null)
+            if (cmp == null) {
+                // 将队尾的元素放置到队首，然后使用下沉操作调整二叉树 Comparable
                 siftDownComparable(0, x, array, n);
-            else
+            } else {
+                // 将队尾的元素放置到队首，然后使用下沉操作调整二叉树 Comparator
                 siftDownUsingComparator(0, x, array, n, cmp);
+            }
+            // 出队元素，容量 - 1
             size = n;
+            // 返回出队的队首元素
             return result;
         }
     }
 
+    // siftUpComparable && siftUpUsingComparator 元素上浮
     /**
      * Inserts item x at position k, maintaining heap invariant by
      * promoting x up the tree until it is greater than or equal to
      * its parent, or is the root.
+     * 1、在 k 位置插入 x 元素，调整 x 位置最终使 x 大于其父节点，或者 x 最终为根节点
      *
      * To simplify and speed up coercions and comparisons. the
      * Comparable and Comparator versions are separated into different
      * methods that are otherwise identical. (Similarly for siftDown.)
      * These methods are static, with heap state as arguments, to
      * simplify use in light of possible comparator exceptions.
+     * 1、为了简化比较机制、加速比较过程
+     * 2、将 Comparable 和 Comparator分开成不同的方法进行比较
+     * 3、是静态方法，heap 状态作为方法参数
+     * 4、根据可能的比较器异常简化使用。
      *
      * @param k the position to fill
      * @param x the item to insert
@@ -416,12 +433,18 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      */
     private static <T> void siftUpComparable(int k, T x, Object[] array) {
         Comparable<? super T> key = (Comparable<? super T>) x;
+        // while循环，直到 x 元素大于其父节点，或者 x 称为根节点，退出循环
         while (k > 0) {
+            // 根据 k 找到父节点位置
             int parent = (k - 1) >>> 1;
             Object e = array[parent];
-            if (key.compareTo((T) e) >= 0)
+            // 如果大于父节点，直接 break
+            if (key.compareTo((T) e) >= 0) {
                 break;
+            }
+            //父节点下移
             array[k] = e;
+            //父节点位置赋值 k
             k = parent;
         }
         array[k] = key;
@@ -429,44 +452,63 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     private static <T> void siftUpUsingComparator(int k, T x, Object[] array,
                                                   Comparator<? super T> cmp) {
+        // while循环，直到 x 元素大于其父节点，或者 x 称为根节点，退出循环
         while (k > 0) {
+            // 根据 k 找到父节点位置
             int parent = (k - 1) >>> 1;
             Object e = array[parent];
-            if (cmp.compare(x, (T) e) >= 0)
+            // 如果大于父节点，直接 break
+            if (cmp.compare(x, (T) e) >= 0) {
                 break;
+            }
+            //父节点下移
             array[k] = e;
+            //父节点位置赋值 k
             k = parent;
         }
         array[k] = x;
     }
 
+    // siftUpComparable && siftUpUsingComparator 元素下沉
     /**
      * Inserts item x at position k, maintaining heap invariant by
      * demoting x down the tree repeatedly until it is less than or
      * equal to its children or is a leaf.
      *
-     * @param k the position to fill
-     * @param x the item to insert
-     * @param array the heap array
-     * @param n heap size
+     * @param k the position to fill 元素位置 0
+     * @param x the item to insert   插入元素
+     * @param array the heap array   堆元素数组内容
+     * @param n heap size            堆元素个数
      */
     private static <T> void siftDownComparable(int k, T x, Object[] array,
                                                int n) {
         if (n > 0) {
             Comparable<? super T> key = (Comparable<? super T>)x;
+            // 中间位置 如果非叶子节点，需要执行while循环，如果是叶子节点，不需要进行while循环
             int half = n >>> 1;           // loop while a non-leaf
             while (k < half) {
+                // 找到子节点位置（假设左节点最小）
                 int child = (k << 1) + 1; // assume left child is least
+                // 左节点
                 Object c = array[child];
+                // 右节点位置
                 int right = child + 1;
+                // 如果 左节点 > 右节点
                 if (right < n &&
-                        ((Comparable<? super T>) c).compareTo((T) array[right]) > 0)
+                        ((Comparable<? super T>) c).compareTo((T) array[right]) > 0) {
+                    // 右节点赋值给child
                     c = array[child = right];
-                if (key.compareTo((T) c) <= 0)
+                }
+                // x <= child 直接break
+                if (key.compareTo((T) c) <= 0) {
                     break;
+                }
+                // x > child 子元素上移
                 array[k] = c;
+                // 重新设置x元素位置
                 k = child;
             }
+            // x 元素下沉
             array[k] = key;
         }
     }
@@ -477,16 +519,27 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         if (n > 0) {
             int half = n >>> 1;
             while (k < half) {
+                // 找到子节点位置（假设左节点最小）
                 int child = (k << 1) + 1;
+                // 左节点
                 Object c = array[child];
+                // 右节点位置
                 int right = child + 1;
-                if (right < n && cmp.compare((T) c, (T) array[right]) > 0)
+                // 如果 左节点 > 右节点
+                if (right < n && cmp.compare((T) c, (T) array[right]) > 0) {
+                    // 右节点赋值给child
                     c = array[child = right];
-                if (cmp.compare(x, (T) c) <= 0)
+                }
+                // x <= child 直接break
+                if (cmp.compare(x, (T) c) <= 0) {
                     break;
+                }
+                // x > child 子元素上移
                 array[k] = c;
+                // 重新设置x元素位置
                 k = child;
             }
+            // x 元素下沉
             array[k] = x;
         }
     }
