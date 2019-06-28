@@ -190,6 +190,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * unbounded this method will never block.
      * 插入元素
      * 由于 DelayQueue 是无界队列，所以该方法永远不会阻塞
+     *
      * @param e the element to add
      * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
@@ -203,15 +204,20 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Retrieves and removes the head of this queue, or returns {@code null}
      * if this queue has no elements with an expired delay.
+     * 1、获取并删除头部元素
+     * 2、如果没有过期元素，返回 null
      *
      * @return the head of this queue, or {@code null} if this
      *         queue has no elements with an expired delay
      */
     public E poll() {
         final ReentrantLock lock = this.lock;
+        // 获取锁
         lock.lock();
         try {
+            // 获取队首元素
             E first = q.peek();
+            // 判断首元素是否过期，如果为 null | 未过期，返回 null
             if (first == null || first.getDelay(NANOSECONDS) > 0)
                 return null;
             else
@@ -224,40 +230,57 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Retrieves and removes the head of this queue, waiting if necessary
      * until an element with an expired delay is available on this queue.
-     *
+     * 1、获取并删除头部元素
+     * 2、如果没有元素过期，会一直阻塞
      * @return the head of this queue
      * @throws InterruptedException {@inheritDoc}
      */
     public E take() throws InterruptedException {
         final ReentrantLock lock = this.lock;
+        // 获取锁，可中断
         lock.lockInterruptibly();
         try {
+            // 一直循环，直到有符合要求元素
             for (;;) {
+                // 获取队首元素
                 E first = q.peek();
-                if (first == null)
+                // 队首元素为 null
+                if (first == null) {
+                    // 当前线程进入等待队列，释放 lock
                     available.await();
-                else {
+                } else {
+                    // 判断元素是否过期，如果过期，直接返回元素
                     long delay = first.getDelay(NANOSECONDS);
-                    if (delay <= 0)
+                    if (delay <= 0) {
                         return q.poll();
+                    }
                     first = null; // don't retain ref while waiting
-                    if (leader != null)
+                    // 如果 leader 不为空，说明有其他线程在处理
+                    if (leader != null) {
+                        // 当前线程进入等待队列，释放 lock
                         available.await();
-                    else {
+                    } else {
+                        // 将当前线程赋值给 leader 变量，独占
                         Thread thisThread = Thread.currentThread();
                         leader = thisThread;
                         try {
+                            // 当前线程进入等待队列，有过期时间，释放 lock
                             available.awaitNanos(delay);
                         } finally {
-                            if (leader == thisThread)
+                            // 释放leader
+                            if (leader == thisThread) {
                                 leader = null;
+                            }
                         }
                     }
                 }
             }
         } finally {
-            if (leader == null && q.peek() != null)
+            // 唤醒其他阻塞线程
+            if (leader == null && q.peek() != null) {
                 available.signal();
+            }
+            // 释放锁
             lock.unlock();
         }
     }
