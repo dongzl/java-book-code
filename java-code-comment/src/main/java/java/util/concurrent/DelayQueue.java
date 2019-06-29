@@ -342,6 +342,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * {@code poll}, if no expired elements are available in the queue,
      * this method returns the element that will expire next,
      * if one exists.
+     * 1、获取 但是不移除 队首元素，如果队列为null，返回null
+     * 2、和poll方法不同，如果队列没有过期元素，这个方法返回下一个即将过期的方法
      *
      * @return the head of this queue, or {@code null} if this
      *         queue is empty
@@ -356,6 +358,10 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * 返回队列元素个数
+     * @return
+     */
     public int size() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -436,6 +442,10 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * The queue will be empty after this call returns.
      * Elements with an unexpired delay are not waited for; they are
      * simply discarded from the queue.
+     * 1、从延迟队列中自动移除所有元素
+     * 2、调用这个方法后队列被清空
+     * 3、未过期的元素不再继续等待，他们都被直接丢弃
+     *
      */
     public void clear() {
         final ReentrantLock lock = this.lock;
@@ -451,6 +461,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * Always returns {@code Integer.MAX_VALUE} because
      * a {@code DelayQueue} is not capacity constrained.
      *
+     * 1、由于DelayQueue是无界队列，所以永远返回Integer.MAX_VALUE
+     *
      * @return {@code Integer.MAX_VALUE}
      */
     public int remainingCapacity() {
@@ -460,11 +472,15 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Returns an array containing all of the elements in this queue.
      * The returned array elements are in no particular order.
+     * 1、返回一个包含队列中所有元素的数组
+     * 2、数组中元素并不保证任何顺序
      *
      * <p>The returned array will be "safe" in that no references to it are
      * maintained by this queue.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
-     *
+     * 返回的数组将是“安全的”，因为此队列不维护对它的引用。
+     * （换句话说，此方法必须分配一个新数组）。
+     * 因此，调用者可以自由修改返回的数组内容。
      * <p>This method acts as bridge between array-based and collection-based
      * APIs.
      *
@@ -528,6 +544,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Removes a single instance of the specified element from this
      * queue, if it is present, whether or not it has expired.
+     * 1、移除队列指定元素，如果存在该元素直接移除，无论该元素是否过期
+     *
      */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;
