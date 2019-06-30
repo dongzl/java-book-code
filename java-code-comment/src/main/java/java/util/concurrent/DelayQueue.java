@@ -254,6 +254,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                     if (delay <= 0) {
                         return q.poll();
                     }
+                    // 在等待期间不持有对象的引用
                     first = null; // don't retain ref while waiting
                     // 如果 leader 不为空，说明有其他线程在处理
                     if (leader != null) {
@@ -503,24 +504,36 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * If the queue fits in the specified array, it is returned therein.
      * Otherwise, a new array is allocated with the runtime type of the
      * specified array and the size of this queue.
+     * 1、返回一个包含队列中所有元素的数组
+     * 2、返回值数组元素的类型是泛型所指定的类型
+     * 3、数组中元素并不保证任何顺序
+     * 4、如果队列适合指定的数组，则会在其中返回。
+     * 5、这个方法会根据运行时泛型类型开辟一个新的数组空间，数组容量与队列容量一致
      *
      * <p>If this queue fits in the specified array with room to spare
      * (i.e., the array has more elements than this queue), the element in
      * the array immediately following the end of the queue is set to
      * {@code null}.
+     * 如果此队列适合具有备用空间的指定阵列，
+     * （即，数组中的元素多于此队列）中的元素，紧跟队列末尾的数组设置为
      *
      * <p>Like the {@link #toArray()} method, this method acts as bridge between
      * array-based and collection-based APIs.  Further, this method allows
      * precise control over the runtime type of the output array, and may,
      * under certain circumstances, be used to save allocation costs.
+     * 1、和toArray()方法类似，这个方法充当数组和集合之间转换的桥梁。
+     * 2、此外，此方法允许精确控制输出数组的运行时类型
+     * 3、通过这种方式，可以节省分配数组空间成本
      *
      * <p>The following code can be used to dump a delay queue into a newly
      * allocated array of {@code Delayed}:
-     *
+     * 下面的代码可以将一个延迟队列转换成一个Delay元素的数组。
      * <pre> {@code Delayed[] a = q.toArray(new Delayed[0]);}</pre>
      *
      * Note that {@code toArray(new Object[0])} is identical in function to
      * {@code toArray()}.
+     *
+     * toArray(new Object[0])方法 和 toArray()方法作用完全相同
      *
      * @param a the array into which the elements of the queue are to
      *          be stored, if it is big enough; otherwise, a new array of the
