@@ -242,8 +242,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * This is greater than timed value because untimed waits spin
      * faster since they don't need to check times on each spin.
      * 1、在不定时等待中阻塞之前自旋的次数。
-     * 2、这大于定时值，因为不定时等待旋转更快，因为它们不需要检查每次旋转的时间。
-     *
+     * 2、这大于定时值，因为不定时等待自旋更快，因为它们不需要检查每次旋转的时间。
      */
     static final int maxUntimedSpins = maxTimedSpins * 16;
 
@@ -483,8 +482,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              */
             final long deadline = timed ? System.nanoTime() + nanos : 0L;
             Thread w = Thread.currentThread();
-            int spins = (shouldSpin(s) ?
-                    (timed ? maxTimedSpins : maxUntimedSpins) : 0);
+            int spins = (shouldSpin(s) ? (timed ? maxTimedSpins : maxUntimedSpins) : 0);
             for (;;) {
                 if (w.isInterrupted())
                     s.tryCancel();
