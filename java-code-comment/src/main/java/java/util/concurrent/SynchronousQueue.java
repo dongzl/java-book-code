@@ -110,6 +110,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * similar. Fifo usually supports higher throughput under
      * contention but Lifo maintains higher thread locality in common
      * applications.
+     * 1、该类实现了W.N.Scherer III和M.L.Scott的“Nonblocking Concurrent Objects with Condition Synchronization”中描述的双栈和双队列算法的扩展。
+     * 2、栈数据结构（LIFO）用来实现非公平模式，队列数据结构（FIFO）用来实现公平模式。
+     * 3、两者的表现大致相似。 FIFO在高并发下支持更高的吞吐量，但LIFO在常见应用程序中保持更高的线程局部性。
      *
      * A dual queue (and similarly stack) is one that at any given
      * time either holds "data" -- items provided by put operations,
@@ -119,6 +122,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * complementary node.  The most interesting feature of these
      * queues is that any operation can figure out which mode the
      * queue is in, and act accordingly without needing locks.
+     * 1、双队列（以及类似的堆栈）是在任何给定时间或者保持“数据”（由put操作提供的元素），
+     * 2、或“请求”数据（表示take操作），或者是空的。
+     * 3、对“完成”的调用（即，从保持数据的队列请求数据，或反之亦然）使互补节点出列。
+     * 4、这些队列最有趣的特性是任何操作都可以确定队列所处的状态，并在不需要锁定的情况下执行相应的操作。
      *
      * Both the queue and stack extend abstract class Transferer
      * defining the single method transfer that does a put or a
@@ -127,24 +134,34 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * so nearly all code can be combined. The resulting transfer
      * methods are on the long side, but are easier to follow than
      * they would be if broken up into nearly-duplicated parts.
+     * 1、栈和队列都继承自抽象类 Transferer，该类只定义了一个方法 transfer，这个方法用来实现 put | take操作。
+     * 2、这些统一为单一方法，因为在双数据结构中，put和take操作是对称的，因此几乎所有代码都可以组合。
+     * 3、由此产生的转移方法是长期的，但如果分解成几乎重复的部分，则更容易遵循。
      *
      * The queue and stack data structures share many conceptual
      * similarities but very few concrete details. For simplicity,
      * they are kept distinct so that they can later evolve
      * separately.
+     * 1、队列和堆栈数据结构许多概念上有相似之处，但很少有具体细节体现。
+     * 2、为简单起见，它们保持不同，以便以后可以单独进化。
      *
      * The algorithms here differ from the versions in the above paper
      * in extending them for use in synchronous queues, as well as
      * dealing with cancellation. The main differences include:
+     * 这里的算法与上述论文中的版本不同，它们扩展它们以用于同步队列，以及处理取消。
      *
      *  1. The original algorithms used bit-marked pointers, but
      *     the ones here use mode bits in nodes, leading to a number
      *     of further adaptations.
      *  2. SynchronousQueues must block threads waiting to become
      *     fulfilled.
+     *     SynchronousQueues满了之后，一定会阻塞线程。
+     *
      *  3. Support for cancellation via timeout and interrupts,
      *     including cleaning out cancelled nodes/threads
      *     from lists to avoid garbage retention and memory depletion.
+     *     支持通过超时和中断取消，包括从列表中清除已取消的节点/线程，
+     *     以避免垃圾保留和内存耗尽。
      *
      * Blocking is mainly accomplished using LockSupport park/unpark,
      * except that nodes that appear to be the next ones to become
@@ -152,6 +169,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * busy synchronous queues, spinning can dramatically improve
      * throughput. And on less busy ones, the amount of spinning is
      * small enough not to be noticeable.
+     * 阻塞主要使用LockSupport park / unpark完成
      *
      * Cleaning is done in different ways in queues vs stacks.  For
      * queues, we can almost always remove a node immediately in O(1)
@@ -161,6 +179,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * potentially O(n) traversal to be sure that we can remove the
      * node, but this can run concurrently with other threads
      * accessing the stack.
+     * 1、在队列与堆栈中以不同方式进行清理。
+     * 2、对于队列，我们​​几乎总能在取消时在O(1)时间内立即删除节点（模式重试以进行一致性检查）。
+     * 3、但如果它可能被固定为当前尾部，它必须等到一些后续取消。
+     * 4、对于堆栈，我们需要潜在的O(n)遍历来确保我们可以删除节点，但是这可以与访问堆栈的其他线程同时运行。
      *
      * While garbage collection takes care of most node reclamation
      * issues that otherwise complicate nonblocking algorithms, care
@@ -173,6 +195,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * old head pointers), but references in Queue nodes must be
      * aggressively forgotten to avoid reachability of everything any
      * node has ever referred to since arrival.
+     * 1、虽然垃圾收集处理大多数节点回收问题，否则会使非阻塞算法复杂化，但要注意“忘记”对数据，其他节点和线程的引用，这些引用可能会被阻塞的线程长期保留。
+     * 2、如果设置为null否则会与主算法冲突，这可以通过将节点的链接更改为现在指向节点本身来完成。
+     * 3、这对于堆栈节点来说并不是很多（因为被阻塞的线程不会挂起到旧的头指针），但必须积极地忘记Queue节点中的引用，以避免任何节点自到达以来所引用的所有内容的可达性。
+     *
      */
 
     /**
@@ -204,6 +230,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * variety of processors and OSes. Empirically, the best value
      * seems not to vary with number of CPUs (beyond 2) so is just
      * a constant.
+     * 1、在定时等待中阻塞之前自旋的次数。
+     * 2、该值是根据经验推导出来的 - 它适用于各种处理器和操作系统。
+     * 3、根据经验，最佳值似乎不随CPU数量（超过2）而变化，因此只是一个常数。
+     *
      */
     static final int maxTimedSpins = (NCPUS < 2) ? 0 : 32;
 
@@ -211,6 +241,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * The number of times to spin before blocking in untimed waits.
      * This is greater than timed value because untimed waits spin
      * faster since they don't need to check times on each spin.
+     * 1、在不定时等待中阻塞之前自旋的次数。
+     * 2、这大于定时值，因为不定时等待旋转更快，因为它们不需要检查每次旋转的时间。
+     *
      */
     static final int maxUntimedSpins = maxTimedSpins * 16;
 
@@ -221,6 +254,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     static final long spinForTimeoutThreshold = 1000L;
 
     /** Dual stack */
+    //双端栈
     static final class TransferStack<E> extends Transferer<E> {
         /*
          * This extends Scherer-Scott dual stack algorithm, differing,
@@ -536,6 +570,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /** Dual Queue */
+    // 双端队列
     static final class TransferQueue<E> extends Transferer<E> {
         /*
          * This extends Scherer-Scott dual queue algorithm, differing,
@@ -863,6 +898,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a {@code SynchronousQueue} with nonfair access policy.
+     * 默认创建非公平策略
      */
     public SynchronousQueue() {
         this(false);
@@ -870,23 +906,29 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a {@code SynchronousQueue} with the specified fairness policy.
+     * 创建 SynchronousQueue，根据 fair 决定是否公平策略
      *
      * @param fair if true, waiting threads contend in FIFO order for
      *        access; otherwise the order is unspecified.
      */
     public SynchronousQueue(boolean fair) {
+        // 公平策略 TransferQueue，非公平策略：TransferStack 实现
         transferer = fair ? new TransferQueue<E>() : new TransferStack<E>();
     }
 
     /**
      * Adds the specified element to this queue, waiting if necessary for
      * another thread to receive it.
+     * 1、向队列中添加元素
+     * 2、等待另外一个线程取走该元素
      *
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
     public void put(E e) throws InterruptedException {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         if (transferer.transfer(e, false, 0) == null) {
             Thread.interrupted();
             throw new InterruptedException();
@@ -896,6 +938,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for another thread to receive it.
+     * 1、向队列中添加元素
+     * 2、等待指定时间，另外一个线程取走该元素
      *
      * @return {@code true} if successful, or {@code false} if the
      *         specified waiting time elapses before a consumer appears
@@ -904,17 +948,23 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      */
     public boolean offer(E e, long timeout, TimeUnit unit)
             throws InterruptedException {
-        if (e == null) throw new NullPointerException();
-        if (transferer.transfer(e, true, unit.toNanos(timeout)) != null)
+        if (e == null) {
+            throw new NullPointerException();
+        }
+        if (transferer.transfer(e, true, unit.toNanos(timeout)) != null) {
             return true;
-        if (!Thread.interrupted())
+        }
+        if (!Thread.interrupted()) {
             return false;
+        }
         throw new InterruptedException();
     }
 
     /**
      * Inserts the specified element into this queue, if another thread is
      * waiting to receive it.
+     * 1、向队列中添加元素
+     * 2、等待另外一个线程取走该元素
      *
      * @param e the element to add
      * @return {@code true} if the element was added to this queue, else
@@ -922,21 +972,26 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         return transferer.transfer(e, true, 0) != null;
     }
 
     /**
      * Retrieves and removes the head of this queue, waiting if necessary
      * for another thread to insert it.
+     * 1、获取并移除队列头部元素
+     * 2、一直等待直到有另外一个线程插入元素
      *
      * @return the head of this queue
      * @throws InterruptedException {@inheritDoc}
      */
     public E take() throws InterruptedException {
         E e = transferer.transfer(null, false, 0);
-        if (e != null)
+        if (e != null) {
             return e;
+        }
         Thread.interrupted();
         throw new InterruptedException();
     }
@@ -945,6 +1000,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Retrieves and removes the head of this queue, waiting
      * if necessary up to the specified wait time, for another thread
      * to insert it.
+     * 1、获取并移除队列头部元素
+     * 2、等待指定时间，直到有另外一个线程插入元素
      *
      * @return the head of this queue, or {@code null} if the
      *         specified waiting time elapses before an element is present
@@ -952,14 +1009,16 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         E e = transferer.transfer(null, true, unit.toNanos(timeout));
-        if (e != null || !Thread.interrupted())
+        if (e != null || !Thread.interrupted()) {
             return e;
+        }
         throw new InterruptedException();
     }
 
     /**
      * Retrieves and removes the head of this queue, if another thread
      * is currently making an element available.
+     * 1、获取并移除队列头部元素
      *
      * @return the head of this queue, or {@code null} if no
      *         element is available
@@ -971,7 +1030,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns {@code true}.
      * A {@code SynchronousQueue} has no internal capacity.
-     *
+     * 一直返回true，就是空队列
      * @return {@code true}
      */
     public boolean isEmpty() {
@@ -981,7 +1040,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A {@code SynchronousQueue} has no internal capacity.
-     *
+     * size 一直返回0
      * @return zero
      */
     public int size() {
@@ -991,7 +1050,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A {@code SynchronousQueue} has no internal capacity.
-     *
+     * 剩余容量，返回0
      * @return zero
      */
     public int remainingCapacity() {
@@ -1001,6 +1060,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Does nothing.
      * A {@code SynchronousQueue} has no internal capacity.
+     * 空实现
      */
     public void clear() {
     }
@@ -1008,7 +1068,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns {@code false}.
      * A {@code SynchronousQueue} has no internal capacity.
-     *
+     * SynchronousQueue 没有内部容量，一直返回 false
      * @param o the element
      * @return {@code false}
      */
@@ -1019,7 +1079,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns {@code false}.
      * A {@code SynchronousQueue} has no internal capacity.
-     *
+     * SynchronousQueue 没有内部容量，一直返回 false
      * @param o the element to remove
      * @return {@code false}
      */
@@ -1030,6 +1090,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Returns {@code false} unless the given collection is empty.
      * A {@code SynchronousQueue} has no internal capacity.
+     * SynchronousQueue 没有内部容量，一直返回 false
      *
      * @param c the collection
      * @return {@code false} unless given collection is empty
@@ -1041,6 +1102,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns {@code false}.
      * A {@code SynchronousQueue} has no internal capacity.
+     * SynchronousQueue 没有内部容量，一直返回 false
      *
      * @param c the collection
      * @return {@code false}
@@ -1052,6 +1114,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns {@code false}.
      * A {@code SynchronousQueue} has no internal capacity.
+     * SynchronousQueue 没有内部容量，一直返回 false
      *
      * @param c the collection
      * @return {@code false}
@@ -1064,7 +1127,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Always returns {@code null}.
      * A {@code SynchronousQueue} does not return elements
      * unless actively waited on.
-     *
+     * 一直返回 null
      * @return {@code null}
      */
     public E peek() {
@@ -1074,7 +1137,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Returns an empty iterator in which {@code hasNext} always returns
      * {@code false}.
-     *
+     * kong
      * @return an empty iterator
      */
     public Iterator<E> iterator() {
