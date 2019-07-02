@@ -395,6 +395,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              */
 
             SNode s = null; // constructed/reused as needed
+            // 根据所传元素判断为生产or消费
             int mode = (e == null) ? REQUEST : DATA;
 
             for (;;) {
