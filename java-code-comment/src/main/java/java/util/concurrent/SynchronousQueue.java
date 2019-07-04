@@ -303,8 +303,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              * @return true if successfully matched to s
              */
             boolean tryMatch(SNode s) {
-                if (match == null &&
-                        UNSAFE.compareAndSwapObject(this, matchOffset, null, s)) {
+                if (match == null && UNSAFE.compareAndSwapObject(this, matchOffset, null, s)) {
                     Thread w = waiter;
                     if (w != null) {    // waiters need at most one unpark
                         waiter = null;
@@ -349,8 +348,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         volatile SNode head;
 
         boolean casHead(SNode h, SNode nh) {
-            return h == head &&
-                    UNSAFE.compareAndSwapObject(this, headOffset, h, nh);
+            return h == head && UNSAFE.compareAndSwapObject(this, headOffset, h, nh);
         }
 
         /**
@@ -593,13 +591,11 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             boolean casNext(QNode cmp, QNode val) {
-                return next == cmp &&
-                        UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+                return next == cmp && UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
             }
 
             boolean casItem(Object cmp, Object val) {
-                return item == cmp &&
-                        UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
+                return item == cmp && UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
             }
 
             /**
@@ -663,8 +659,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * old head's next node to avoid garbage retention.
          */
         void advanceHead(QNode h, QNode nh) {
-            if (h == head &&
-                    UNSAFE.compareAndSwapObject(this, headOffset, h, nh))
+            if (h == head && UNSAFE.compareAndSwapObject(this, headOffset, h, nh))
                 h.next = h; // forget old next
         }
 
