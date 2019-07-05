@@ -49,6 +49,8 @@ import java.util.function.Consumer;
 /**
  * An optionally-bounded {@linkplain BlockingQueue blocking queue} based on
  * linked nodes.
+ * 使用链式数据结构实现的可选有界阻塞队列。
+ *
  * This queue orders elements FIFO (first-in-first-out).
  * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
@@ -58,12 +60,20 @@ import java.util.function.Consumer;
  * operations obtain elements at the head of the queue.
  * Linked queues typically have higher throughput than array-based queues but
  * less predictable performance in most concurrent applications.
+ * 1、队列元素按照FIFO顺序排序。
+ * 2、head元素是入队时间最长的元素。
+ * 3、tail元素是入队时间最短的元素。
+ * 4、新元素插入到队列队尾，出队操作从对头获取元素。
+ * 5、链式队列通常比基于数组队列具有更高的吞吐量，但在大多数并发应用程序中，性能不太可预测。
  *
  * <p>The optional capacity bound constructor argument serves as a
  * way to prevent excessive queue expansion. The capacity, if unspecified,
  * is equal to {@link Integer#MAX_VALUE}.  Linked nodes are
  * dynamically created upon each insertion unless this would bring the
  * queue above capacity.
+ * 1、构造函数参数用于确定队列容量，来防止队列过度扩展。
+ * 2、如果未指定该参数，默认为 Integer.MAX_VALUE。
+ * 3、链式节点是在创建节点时动态创建的，除非队列超过容量。
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
