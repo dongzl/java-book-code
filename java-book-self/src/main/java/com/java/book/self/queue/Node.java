@@ -9,13 +9,13 @@ import java.util.concurrent.locks.LockSupport;
  */
 public final class Node {
 
-    final boolean isData;
+    public final boolean isData;
 
-    volatile Object item;
+    public volatile Object item;
 
-    volatile Node next;
+    public volatile Node next;
 
-    volatile Thread waiter;
+    public volatile Thread waiter;
 
     private static final sun.misc.Unsafe UNSAFE;
 
@@ -37,44 +37,44 @@ public final class Node {
         }
     }
 
-    final boolean casNext(Node cmp, Node val) {
+    public final boolean casNext(Node cmp, Node val) {
         return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
     }
 
-    final boolean casItem(Object cmp, Object val) {
+    public final boolean casItem(Object cmp, Object val) {
         return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
     }
 
-    Node(Object item, boolean isData) {
+    public Node(Object item, boolean isData) {
         UNSAFE.putObject(this, itemOffset, item); // relaxed write
         this.isData = isData;
     }
 
-    final void forgetNext() {
+    public final void forgetNext() {
         UNSAFE.putObject(this, nextOffset, this);
     }
 
-    final void forgetContents() {
+    public final void forgetContents() {
         UNSAFE.putObject(this, itemOffset, this);
         UNSAFE.putObject(this, waiterOffset, null);
     }
 
-    final boolean isMatched() {
+    public final boolean isMatched() {
         Object x = item;
         return (x == this) || ((x == null) == isData);
     }
 
-    final boolean isUnmatchedRequest() {
+    public final boolean isUnmatchedRequest() {
         return !isData && item == null;
     }
 
-    final boolean cannotPrecede(boolean haveData) {
+    public final boolean cannotPrecede(boolean haveData) {
         boolean d = isData;
         Object x;
         return d != haveData && (x = item) != this && (x != null) == d;
     }
 
-    final boolean tryMatchData() {
+    public final boolean tryMatchData() {
         Object x = item;
         if (x != null && x != this && casItem(x, null)) {
             LockSupport.unpark(waiter);
