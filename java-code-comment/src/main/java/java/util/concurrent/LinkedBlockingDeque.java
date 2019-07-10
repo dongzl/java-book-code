@@ -48,12 +48,17 @@ import java.util.function.Consumer;
 /**
  * An optionally-bounded {@linkplain BlockingDeque blocking deque} based on
  * linked nodes.
+ * 1、LinkedBlockingDeque 是基于链表结构实现的。
+ * 2、容量是可以指定的，如果不指定，为Integer.MAX_VALUE
  *
  * <p>The optional capacity bound constructor argument serves as a
  * way to prevent excessive expansion. The capacity, if unspecified,
  * is equal to {@link Integer#MAX_VALUE}.  Linked nodes are
  * dynamically created upon each insertion unless this would bring the
  * deque above capacity.
+ * 1、构造方法参数用于设定队列容量，指定容量可以防止队列过度膨胀。
+ * 2、如果未指定该参数，则为Integer.MAX_VALUE。
+ * 3、链表节点是在插入时动态创建的。
  *
  * <p>Most operations run in constant time (ignoring time spent
  * blocking).  Exceptions include {@link #remove(Object) remove},
@@ -61,6 +66,8 @@ import java.util.function.Consumer;
  * #removeLastOccurrence removeLastOccurrence}, {@link #contains
  * contains}, {@link #iterator iterator.remove()}, and the bulk
  * operations, all of which run in linear time.
+ * 1、LinkedBlockingDeque 大部分操作都是线性时间运行。
+ * 2、remove(Object)、removeFirstOccurrence、removeLastOccurrence、contains、iterator.remove()和一些批量操作不是线性时间
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -81,6 +88,8 @@ public class LinkedBlockingDeque<E>
     /*
      * Implemented as a simple doubly-linked list protected by a
      * single lock and using conditions to manage blocking.
+     * 1、一个简单的双端队列实现
+     * 2、通过一把锁实现阻塞效果
      *
      * To implement weakly consistent iterators, it appears we need to
      * keep all Nodes GC-reachable from a predecessor dequeued Node.
@@ -198,10 +207,12 @@ public class LinkedBlockingDeque<E>
         lock.lock(); // Never contended, but necessary for visibility
         try {
             for (E e : c) {
-                if (e == null)
+                if (e == null) {
                     throw new NullPointerException();
-                if (!linkLast(new Node<E>(e)))
+                }
+                if (!linkLast(new Node<E>(e))) {
                     throw new IllegalStateException("Deque full");
+                }
             }
         } finally {
             lock.unlock();
@@ -215,16 +226,17 @@ public class LinkedBlockingDeque<E>
      * Links node as first element, or returns false if full.
      */
     private boolean linkFirst(Node<E> node) {
-        // assert lock.isHeldByCurrentThread();
-        if (count >= capacity)
+        if (count >= capacity) {
             return false;
+        }
         Node<E> f = first;
         node.next = f;
         first = node;
-        if (last == null)
+        if (last == null) {
             last = node;
-        else
+        } else {
             f.prev = node;
+        }
         ++count;
         notEmpty.signal();
         return true;
@@ -234,16 +246,17 @@ public class LinkedBlockingDeque<E>
      * Links node as last element, or returns false if full.
      */
     private boolean linkLast(Node<E> node) {
-        // assert lock.isHeldByCurrentThread();
-        if (count >= capacity)
+        if (count >= capacity) {
             return false;
+        }
         Node<E> l = last;
         node.prev = l;
         last = node;
-        if (first == null)
+        if (first == null) {
             first = node;
-        else
+        } else {
             l.next = node;
+        }
         ++count;
         notEmpty.signal();
         return true;
@@ -253,19 +266,20 @@ public class LinkedBlockingDeque<E>
      * Removes and returns first element, or null if empty.
      */
     private E unlinkFirst() {
-        // assert lock.isHeldByCurrentThread();
         Node<E> f = first;
-        if (f == null)
+        if (f == null) {
             return null;
+        }
         Node<E> n = f.next;
         E item = f.item;
         f.item = null;
         f.next = f; // help GC
         first = n;
-        if (n == null)
+        if (n == null) {
             last = null;
-        else
+        } else {
             n.prev = null;
+        }
         --count;
         notFull.signal();
         return item;
@@ -275,19 +289,20 @@ public class LinkedBlockingDeque<E>
      * Removes and returns last element, or null if empty.
      */
     private E unlinkLast() {
-        // assert lock.isHeldByCurrentThread();
         Node<E> l = last;
-        if (l == null)
+        if (l == null) {
             return null;
+        }
         Node<E> p = l.prev;
         E item = l.item;
         l.item = null;
         l.prev = l; // help GC
         last = p;
-        if (p == null)
+        if (p == null) {
             first = null;
-        else
+        } else {
             p.next = null;
+        }
         --count;
         notFull.signal();
         return item;
@@ -297,7 +312,6 @@ public class LinkedBlockingDeque<E>
      * Unlinks x.
      */
     void unlink(Node<E> x) {
-        // assert lock.isHeldByCurrentThread();
         Node<E> p = x.prev;
         Node<E> n = x.next;
         if (p == null) {
@@ -339,7 +353,9 @@ public class LinkedBlockingDeque<E>
      * @throws NullPointerException {@inheritDoc}
      */
     public boolean offerFirst(E e) {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         Node<E> node = new Node<E>(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -354,7 +370,9 @@ public class LinkedBlockingDeque<E>
      * @throws NullPointerException {@inheritDoc}
      */
     public boolean offerLast(E e) {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         Node<E> node = new Node<E>(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -370,13 +388,16 @@ public class LinkedBlockingDeque<E>
      * @throws InterruptedException {@inheritDoc}
      */
     public void putFirst(E e) throws InterruptedException {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         Node<E> node = new Node<E>(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            while (!linkFirst(node))
+            while (!linkFirst(node)) {
                 notFull.await();
+            }
         } finally {
             lock.unlock();
         }
@@ -387,13 +408,16 @@ public class LinkedBlockingDeque<E>
      * @throws InterruptedException {@inheritDoc}
      */
     public void putLast(E e) throws InterruptedException {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         Node<E> node = new Node<E>(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            while (!linkLast(node))
+            while (!linkLast(node)) {
                 notFull.await();
+            }
         } finally {
             lock.unlock();
         }
@@ -405,15 +429,18 @@ public class LinkedBlockingDeque<E>
      */
     public boolean offerFirst(E e, long timeout, TimeUnit unit)
             throws InterruptedException {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         Node<E> node = new Node<E>(e);
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             while (!linkFirst(node)) {
-                if (nanos <= 0)
+                if (nanos <= 0) {
                     return false;
+                }
                 nanos = notFull.awaitNanos(nanos);
             }
             return true;
@@ -428,15 +455,18 @@ public class LinkedBlockingDeque<E>
      */
     public boolean offerLast(E e, long timeout, TimeUnit unit)
             throws InterruptedException {
-        if (e == null) throw new NullPointerException();
+        if (e == null) {
+            throw new NullPointerException();
+        }
         Node<E> node = new Node<E>(e);
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             while (!linkLast(node)) {
-                if (nanos <= 0)
+                if (nanos <= 0) {
                     return false;
+                }
                 nanos = notFull.awaitNanos(nanos);
             }
             return true;
@@ -450,7 +480,9 @@ public class LinkedBlockingDeque<E>
      */
     public E removeFirst() {
         E x = pollFirst();
-        if (x == null) throw new NoSuchElementException();
+        if (x == null) {
+            throw new NoSuchElementException();
+        }
         return x;
     }
 
@@ -459,7 +491,9 @@ public class LinkedBlockingDeque<E>
      */
     public E removeLast() {
         E x = pollLast();
-        if (x == null) throw new NoSuchElementException();
+        if (x == null) {
+            throw new NoSuchElementException();
+        }
         return x;
     }
 
@@ -488,8 +522,9 @@ public class LinkedBlockingDeque<E>
         lock.lock();
         try {
             E x;
-            while ( (x = unlinkFirst()) == null)
+            while ((x = unlinkFirst()) == null){
                 notEmpty.await();
+            }
             return x;
         } finally {
             lock.unlock();
@@ -516,7 +551,7 @@ public class LinkedBlockingDeque<E>
         lock.lockInterruptibly();
         try {
             E x;
-            while ( (x = unlinkFirst()) == null) {
+            while ((x = unlinkFirst()) == null) {
                 if (nanos <= 0)
                     return null;
                 nanos = notEmpty.awaitNanos(nanos);
