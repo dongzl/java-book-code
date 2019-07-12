@@ -107,6 +107,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Gets the array.  Non-private so as to also be accessible
      * from CopyOnWriteArraySet class.
+     * 获取数组内容，非私有方法，方便CopyOnWriteArraySet类使用
      */
     final Object[] getArray() {
         return array;
@@ -114,6 +115,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Sets the array.
+     * 设置数组内容
      */
     final void setArray(Object[] a) {
         array = a;
@@ -121,6 +123,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Creates an empty list.
+     * 创建一个空的 CopyOnWriteArrayList
      */
     public CopyOnWriteArrayList() {
         setArray(new Object[0]);
@@ -130,6 +133,7 @@ public class CopyOnWriteArrayList<E>
      * Creates a list containing the elements of the specified
      * collection, in the order they are returned by the collection's
      * iterator.
+     * 创建一个CopyOnWriteArrayList，包含参数集合内容
      *
      * @param c the collection of initially held elements
      * @throws NullPointerException if the specified collection is null
@@ -149,6 +153,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Creates a list holding a copy of the given array.
+     * 创建一个CopyOnWriteArrayList，包含参数数组元素内容
      *
      * @param toCopyIn the array (a copy of this array is used as the
      *        internal array)
@@ -160,6 +165,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Returns the number of elements in this list.
+     * 返回集合中元素个数
      *
      * @return the number of elements in this list
      */
@@ -169,6 +175,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Returns {@code true} if this list contains no elements.
+     * 判断集合是否为空
      *
      * @return {@code true} if this list contains no elements
      */
@@ -178,6 +185,8 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Tests for equality, coping with nulls.
+     * 判断元素是否相等
+     *
      */
     private static boolean eq(Object o1, Object o2) {
         return (o1 == null) ? o2 == null : o1.equals(o2);
@@ -192,16 +201,19 @@ public class CopyOnWriteArrayList<E>
      * @param fence one past last index to search
      * @return index of element, or -1 if absent
      */
-    private static int indexOf(Object o, Object[] elements,
-                               int index, int fence) {
+    private static int indexOf(Object o, Object[] elements, int index, int fence) {
         if (o == null) {
-            for (int i = index; i < fence; i++)
-                if (elements[i] == null)
+            for (int i = index; i < fence; i++) {
+                if (elements[i] == null) {
                     return i;
+                }
+            }
         } else {
-            for (int i = index; i < fence; i++)
-                if (o.equals(elements[i]))
+            for (int i = index; i < fence; i++) {
+                if (o.equals(elements[i])) {
                     return i;
+                }
+            }
         }
         return -1;
     }
@@ -215,13 +227,17 @@ public class CopyOnWriteArrayList<E>
      */
     private static int lastIndexOf(Object o, Object[] elements, int index) {
         if (o == null) {
-            for (int i = index; i >= 0; i--)
-                if (elements[i] == null)
+            for (int i = index; i >= 0; i--) {
+                if (elements[i] == null) {
                     return i;
+                }
+            }
         } else {
-            for (int i = index; i >= 0; i--)
-                if (o.equals(elements[i]))
+            for (int i = index; i >= 0; i--) {
+                if (o.equals(elements[i])) {
                     return i;
+                }
+            }
         }
         return -1;
     }
@@ -231,6 +247,9 @@ public class CopyOnWriteArrayList<E>
      * More formally, returns {@code true} if and only if this list contains
      * at least one element {@code e} such that
      * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     * 0 == null ? e == null : o.equals(e)
+     *
+     * 判断是否包含参数指定元素
      *
      * @param o element whose presence in this list is to be tested
      * @return {@code true} if this list contains the specified element
@@ -255,6 +274,8 @@ public class CopyOnWriteArrayList<E>
      * More formally, returns the lowest index {@code i} such that
      * <tt>(i&nbsp;&gt;=&nbsp;index&nbsp;&amp;&amp;&nbsp;(e==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;e.equals(get(i))))</tt>,
      * or -1 if there is no such index.
+     * 查询元素 E 在集合中的索引位置
+     * 从下标 i 开始查找
      *
      * @param e element to search for
      * @param index index to start searching from
@@ -283,6 +304,8 @@ public class CopyOnWriteArrayList<E>
      * More formally, returns the highest index {@code i} such that
      * <tt>(i&nbsp;&lt;=&nbsp;index&nbsp;&amp;&amp;&nbsp;(e==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;e.equals(get(i))))</tt>,
      * or -1 if there is no such index.
+     * 查询元素 E 在集合中的最后出现索引位置
+     * 从下标 i 开始查找
      *
      * @param e element to search for
      * @param index index to start searching backwards from
@@ -319,10 +342,13 @@ public class CopyOnWriteArrayList<E>
     /**
      * Returns an array containing all of the elements in this list
      * in proper sequence (from first to last element).
+     * 返回一个数组，数组中包含了集合中的所有元素
      *
      * <p>The returned array will be "safe" in that no references to it are
      * maintained by this list.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
+     * 返回的数组是安全的，数组中元素和集合中元素指向不同引用
+     * 这个数组需要新开辟内存空间。
      *
      * <p>This method acts as bridge between array-based and collection-based
      * APIs.
@@ -546,6 +572,7 @@ public class CopyOnWriteArrayList<E>
      */
     private boolean remove(Object o, Object[] snapshot, int index) {
         final ReentrantLock lock = this.lock;
+        // 加锁
         lock.lock();
         try {
             Object[] current = getArray();
@@ -568,9 +595,7 @@ public class CopyOnWriteArrayList<E>
             }
             Object[] newElements = new Object[len - 1];
             System.arraycopy(current, 0, newElements, 0, index);
-            System.arraycopy(current, index + 1,
-                    newElements, index,
-                    len - index - 1);
+            System.arraycopy(current, index + 1, newElements, index, len - index - 1);
             setArray(newElements);
             return true;
         } finally {
@@ -596,9 +621,9 @@ public class CopyOnWriteArrayList<E>
         try {
             Object[] elements = getArray();
             int len = elements.length;
-
-            if (fromIndex < 0 || toIndex > len || toIndex < fromIndex)
+            if (fromIndex < 0 || toIndex > len || toIndex < fromIndex) {
                 throw new IndexOutOfBoundsException();
+            }
             int newlen = len - (toIndex - fromIndex);
             int numMoved = len - toIndex;
             if (numMoved == 0)
