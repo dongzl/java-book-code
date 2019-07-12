@@ -642,7 +642,8 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Appends the element, if not present.
-     *
+     * 如果集合中不存在该元素，添加元素
+     * 
      * @param e element to be added to this list, if absent
      * @return {@code true} if the element was added
      */
@@ -717,14 +718,15 @@ public class CopyOnWriteArrayList<E>
      * @see #remove(Object)
      */
     public boolean removeAll(Collection<?> c) {
-        if (c == null) throw new NullPointerException();
+        if (c == null) {
+            throw new NullPointerException();
+        }
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             Object[] elements = getArray();
             int len = elements.length;
             if (len != 0) {
-                // temp array holds those elements we know we want to keep
                 int newlen = 0;
                 Object[] temp = new Object[len];
                 for (int i = 0; i < len; ++i) {
@@ -747,6 +749,8 @@ public class CopyOnWriteArrayList<E>
      * Retains only the elements in this list that are contained in the
      * specified collection.  In other words, removes from this list all of
      * its elements that are not contained in the specified collection.
+     * 仅保留此列表中包含在指定的集合中元素。
+     * 换句话说，从此列表中删除所有其元素不包含在指定集合中。
      *
      * @param c collection containing elements to be retained in this list
      * @return {@code true} if this list changed as a result of the call
@@ -760,21 +764,25 @@ public class CopyOnWriteArrayList<E>
      * @see #remove(Object)
      */
     public boolean retainAll(Collection<?> c) {
-        if (c == null) throw new NullPointerException();
+        if (c == null) {
+            throw new NullPointerException();
+        }
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             Object[] elements = getArray();
             int len = elements.length;
             if (len != 0) {
-                // temp array holds those elements we know we want to keep
                 int newlen = 0;
                 Object[] temp = new Object[len];
                 for (int i = 0; i < len; ++i) {
+                    // 删除元素
                     Object element = elements[i];
-                    if (c.contains(element))
+                    if (c.contains(element)) {
                         temp[newlen++] = element;
+                    }
                 }
+                // 如果长度不相等，有元素删除
                 if (newlen != len) {
                     setArray(Arrays.copyOf(temp, newlen));
                     return true;
@@ -799,20 +807,20 @@ public class CopyOnWriteArrayList<E>
      */
     public int addAllAbsent(Collection<? extends E> c) {
         Object[] cs = c.toArray();
-        if (cs.length == 0)
+        if (cs.length == 0) {
             return 0;
+        }
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             Object[] elements = getArray();
             int len = elements.length;
             int added = 0;
-            // uniquify and compact elements in cs
             for (int i = 0; i < cs.length; ++i) {
                 Object e = cs[i];
-                if (indexOf(e, elements, 0, len) < 0 &&
-                        indexOf(e, cs, 0, added) < 0)
+                if (indexOf(e, elements, 0, len) < 0 && indexOf(e, cs, 0, added) < 0) {
                     cs[added++] = e;
+                }
             }
             if (added > 0) {
                 Object[] newElements = Arrays.copyOf(elements, len + added);
@@ -828,6 +836,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Removes all of the elements from this list.
      * The list will be empty after this call returns.
+     * 情况集合所有元素
      */
     public void clear() {
         final ReentrantLock lock = this.lock;
@@ -850,18 +859,18 @@ public class CopyOnWriteArrayList<E>
      * @see #add(Object)
      */
     public boolean addAll(Collection<? extends E> c) {
-        Object[] cs = (c.getClass() == CopyOnWriteArrayList.class) ?
-                ((CopyOnWriteArrayList<?>)c).getArray() : c.toArray();
-        if (cs.length == 0)
+        Object[] cs = (c.getClass() == CopyOnWriteArrayList.class) ? ((CopyOnWriteArrayList<?>)c).getArray() : c.toArray();
+        if (cs.length == 0) {
             return false;
+        }
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             Object[] elements = getArray();
             int len = elements.length;
-            if (len == 0 && cs.getClass() == Object[].class)
+            if (len == 0 && cs.getClass() == Object[].class) {
                 setArray(cs);
-            else {
+            } else {
                 Object[] newElements = Arrays.copyOf(elements, len + cs.length);
                 System.arraycopy(cs, 0, newElements, len, cs.length);
                 setArray(newElements);
