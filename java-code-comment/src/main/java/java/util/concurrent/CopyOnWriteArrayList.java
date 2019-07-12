@@ -895,21 +895,20 @@ public class CopyOnWriteArrayList<E>
         try {
             Object[] elements = getArray();
             int len = elements.length;
-            if (index > len || index < 0)
-                throw new IndexOutOfBoundsException("Index: "+index+
-                        ", Size: "+len);
-            if (cs.length == 0)
+            if (index > len || index < 0) {
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: "+len);
+            }
+            if (cs.length == 0) {
                 return false;
+            }
             int numMoved = len - index;
             Object[] newElements;
-            if (numMoved == 0)
+            if (numMoved == 0) {
                 newElements = Arrays.copyOf(elements, len + cs.length);
-            else {
+            } else {
                 newElements = new Object[len + cs.length];
                 System.arraycopy(elements, 0, newElements, 0, index);
-                System.arraycopy(elements, index,
-                        newElements, index + cs.length,
-                        numMoved);
+                System.arraycopy(elements, index, newElements, index + cs.length, numMoved);
             }
             System.arraycopy(cs, 0, newElements, index, cs.length);
             setArray(newElements);
@@ -920,11 +919,14 @@ public class CopyOnWriteArrayList<E>
     }
 
     public void forEach(Consumer<? super E> action) {
-        if (action == null) throw new NullPointerException();
+        if (action == null) {
+            throw new NullPointerException();
+        }
         Object[] elements = getArray();
         int len = elements.length;
         for (int i = 0; i < len; ++i) {
-            @SuppressWarnings("unchecked") E e = (E) elements[i];
+            @SuppressWarnings("unchecked")
+            E e = (E) elements[i];
             action.accept(e);
         }
     }
@@ -956,7 +958,9 @@ public class CopyOnWriteArrayList<E>
     }
 
     public void replaceAll(UnaryOperator<E> operator) {
-        if (operator == null) throw new NullPointerException();
+        if (operator == null) {
+            throw new NullPointerException();
+        }
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -973,6 +977,7 @@ public class CopyOnWriteArrayList<E>
         }
     }
 
+    // 排序
     public void sort(Comparator<? super E> c) {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -1066,20 +1071,24 @@ public class CopyOnWriteArrayList<E>
      * @return {@code true} if the specified object is equal to this list
      */
     public boolean equals(Object o) {
-        if (o == this)
+        if (o == this) {
             return true;
-        if (!(o instanceof List))
+        }
+        if (!(o instanceof List)) {
             return false;
-
+        }
         List<?> list = (List<?>)(o);
         Iterator<?> it = list.iterator();
         Object[] elements = getArray();
         int len = elements.length;
-        for (int i = 0; i < len; ++i)
-            if (!it.hasNext() || !eq(elements[i], it.next()))
+        for (int i = 0; i < len; ++i) {
+            if (!it.hasNext() || !eq(elements[i], it.next())) {
                 return false;
-        if (it.hasNext())
+            }
+        }
+        if (it.hasNext()) {
             return false;
+        }
         return true;
     }
 
@@ -1096,7 +1105,7 @@ public class CopyOnWriteArrayList<E>
         int len = elements.length;
         for (int i = 0; i < len; ++i) {
             Object obj = elements[i];
-            hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
+            hashCode = 31 * hashCode + (obj == null ? 0 : obj.hashCode());
         }
         return hashCode;
     }
@@ -1267,8 +1276,9 @@ public class CopyOnWriteArrayList<E>
         try {
             Object[] elements = getArray();
             int len = elements.length;
-            if (fromIndex < 0 || toIndex > len || fromIndex > toIndex)
+            if (fromIndex < 0 || toIndex > len || fromIndex > toIndex) {
                 throw new IndexOutOfBoundsException();
+            }
             return new COWSubList<E>(this, fromIndex, toIndex);
         } finally {
             lock.unlock();
