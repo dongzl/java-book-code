@@ -643,7 +643,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Appends the element, if not present.
      * 如果集合中不存在该元素，添加元素
-     * 
+     *
      * @param e element to be added to this list, if absent
      * @return {@code true} if the element was added
      */
