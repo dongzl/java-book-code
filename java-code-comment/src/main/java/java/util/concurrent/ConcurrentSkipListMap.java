@@ -623,8 +623,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             try {
                 UNSAFE = sun.misc.Unsafe.getUnsafe();
                 Class<?> k = Index.class;
-                rightOffset = UNSAFE.objectFieldOffset
-                        (k.getDeclaredField("right"));
+                rightOffset = UNSAFE.objectFieldOffset(k.getDeclaredField("right"));
             } catch (Exception e) {
                 throw new Error(e);
             }
@@ -1279,6 +1278,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Constructs a new, empty map, sorted according to the
      * {@linkplain Comparable natural ordering} of the keys.
+     * 创建一个空的 ConcurrentSkipListMap，根据 key 的自然顺序排序（Comparable）
      */
     public ConcurrentSkipListMap() {
         this.comparator = null;
@@ -1288,6 +1288,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Constructs a new, empty map, sorted according to the specified
      * comparator.
+     * 创建一个空的 ConcurrentSkipListMap，根据参数指定的 comparator 进行排序
      *
      * @param comparator the comparator that will be used to order this map.
      *        If {@code null}, the {@linkplain Comparable natural
@@ -1302,6 +1303,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Constructs a new map containing the same mappings as the given map,
      * sorted according to the {@linkplain Comparable natural ordering} of
      * the keys.
+     * 根据参数map 创建一个 ConcurrentSkipListMap，根据 key 的自然顺序排序（Comparable）
      *
      * @param  m the map whose mappings are to be placed in this map
      * @throws ClassCastException if the keys in {@code m} are not
@@ -1318,6 +1320,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Constructs a new map containing the same mappings and using the
      * same ordering as the specified sorted map.
+     * 根据参数 SortedMap 创建一个 ConcurrentSkipListMap，根据 SortedMap 的元素顺序排序
      *
      * @param m the sorted map whose mappings are to be placed in this
      *        map, and whose comparator is to be used to sort this map
@@ -1339,8 +1342,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     public ConcurrentSkipListMap<K,V> clone() {
         try {
             @SuppressWarnings("unchecked")
-            ConcurrentSkipListMap<K,V> clone =
-                    (ConcurrentSkipListMap<K,V>) super.clone();
+            ConcurrentSkipListMap<K,V> clone = (ConcurrentSkipListMap<K,V>) super.clone();
             clone.initialize();
             clone.buildFromSorted(this);
             return clone;
