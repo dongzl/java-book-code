@@ -359,11 +359,17 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Special value used to identify base-level header
+     *
+     * 最底层链表的头指针BASE_HEADER
+     *
      */
     private static final Object BASE_HEADER = new Object();
 
     /**
      * The topmost head index of the skiplist.
+     *
+     * 最上层链表的头指针head
+     *
      */
     private transient volatile HeadIndex<K,V> head;
 
@@ -413,11 +419,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * headed by a dummy node accessible as head.node. The value field
      * is declared only as Object because it takes special non-V
      * values for marker and header nodes.
+     *
+     * 普通结点Node结构体
+     * 
      */
     static final class Node<K,V> {
-        final K key;
-        volatile Object value;
-        volatile Node<K,V> next;
+        final K key; // key
+        volatile Object value; // value
+        volatile Node<K,V> next; // 指向下一个结点
 
         /**
          * Creates a new regular node.
@@ -561,11 +570,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * fields, they have different types and are handled in different
      * ways, that can't nicely be captured by placing field in a
      * shared abstract class.
+     *
+     * 索引结点 Index 定义
+     *
      */
     static class Index<K,V> {
-        final Node<K,V> node;
-        final Index<K,V> down;
-        volatile Index<K,V> right;
+        final Node<K,V> node; // node指向最底层链表的Node结点
+        final Index<K,V> down; // down指向下层Index结点
+        volatile Index<K,V> right; // right指向右边的Index结点
 
         /**
          * Creates index node with given values.
@@ -634,9 +646,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Nodes heading each level keep track of their level.
+     *
+     * 头索引结点HeadIndex
      */
     static final class HeadIndex<K,V> extends Index<K,V> {
-        final int level;
+
+        final int level; // 层级
+
         HeadIndex(Node<K,V> node, Index<K,V> down, Index<K,V> right, int level) {
             super(node, down, right);
             this.level = level;
