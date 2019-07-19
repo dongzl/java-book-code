@@ -421,7 +421,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * values for marker and header nodes.
      *
      * 普通结点Node结构体
-     * 
+     *
      */
     static final class Node<K,V> {
         final K key; // key
