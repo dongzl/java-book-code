@@ -430,6 +430,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Creates a new regular node.
+         *
+         * 创建一个正常结点
          */
         Node(K key, Object value, Node<K,V> next) {
             this.key = key;
@@ -443,6 +445,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * have null keys, a fact that is exploited in a few places,
          * but this doesn't distinguish markers from the base-level
          * header node (head.node), which also has a null key.
+         *
+         * 标记结点，区分一个标记结点的方式是该结点的value是指向其自身。
+         * 标记结点的 key 为 null，这个特性在一些地方被利用到
+         * 但这并不能区分标记和头节点（head.node），它也有一个空键。
          */
         Node(Node<K,V> next) {
             this.key = null;
@@ -452,6 +458,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * compareAndSet value field
+         *
+         * CAS更新结点的 value
          */
         boolean casValue(Object cmp, Object val) {
             return UNSAFE.compareAndSwapObject(this, valueOffset, cmp, val);
@@ -459,6 +467,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * compareAndSet next field
+         *
+         * CAS更新结点的 next
          */
         boolean casNext(Node<K,V> cmp, Node<K,V> val) {
             return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
@@ -472,6 +482,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * test if value points to node.
          *
          * @return true if this node is a marker node
+         *
+         * 判断当前结点是否为[标记结点]
          */
         boolean isMarker() {
             return value == this;
@@ -479,6 +491,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Returns true if this node is the header of base-level list.
+         *
+         * 判断当前结点是否是最底层链表的头结点
+         *
          * @return true if this node is header node
          */
         boolean isBaseHeader() {
@@ -487,8 +502,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Tries to append a deletion marker to this node.
-         * @param f the assumed current successor of this node
-         * @return true if successful
+         *
+         * 在当前结点后面插入一个标记结点.
+         *
+         * @param f the assumed current successor of this node 当前结点的后继结点
+         * @return true if successful  插入成功
          */
         boolean appendMarker(Node<K,V> f) {
             return casNext(f, new Node<K,V>(f));
@@ -498,8 +516,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Helps out a deletion by appending marker or unlinking from
          * predecessor. This is called during traversals when value
          * field seen to be null.
-         * @param b predecessor
-         * @param f successor
+         *
+         * 辅助删除结点方法.
+         *
+         * @param b predecessor 当前结点的前驱结点
+         * @param f successor   当前结点的后继结点
          */
         void helpDelete(Node<K,V> b, Node<K,V> f) {
             /*
@@ -518,13 +539,20 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /**
          * Returns value if this node contains a valid key-value pair,
          * else null.
+         *
+         * 返回结点的value值.
+         *
          * @return this node's value if it isn't a marker or header or
          * is deleted, else null
+         *
+         * 标记结点或最底层头结点，直接返回 null
          */
         V getValidValue() {
             Object v = value;
-            if (v == this || v == BASE_HEADER)
+            // 标记结点或最底层头结点，直接返回 null
+            if (v == this || v == BASE_HEADER) {
                 return null;
+            }
             @SuppressWarnings("unchecked") V vv = (V)v;
             return vv;
         }
@@ -532,6 +560,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /**
          * Creates and returns a new SimpleImmutableEntry holding current
          * mapping if this node holds a valid value, else null.
+         *
+         * 返回当前结点的一个Immutable快照.
+         *
          * @return new entry or null
          */
         AbstractMap.SimpleImmutableEntry<K,V> createSnapshot() {
@@ -552,10 +583,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             try {
                 UNSAFE = sun.misc.Unsafe.getUnsafe();
                 Class<?> k = Node.class;
-                valueOffset = UNSAFE.objectFieldOffset
-                        (k.getDeclaredField("value"));
-                nextOffset = UNSAFE.objectFieldOffset
-                        (k.getDeclaredField("next"));
+                valueOffset = UNSAFE.objectFieldOffset(k.getDeclaredField("value"));
+                nextOffset = UNSAFE.objectFieldOffset(k.getDeclaredField("next"));
             } catch (Exception e) {
                 throw new Error(e);
             }
