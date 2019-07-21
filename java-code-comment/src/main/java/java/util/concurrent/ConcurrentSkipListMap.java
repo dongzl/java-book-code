@@ -610,6 +610,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Creates index node with given values.
+         *
+         * 创建一个 Index 结点
          */
         Index(Node<K,V> node, Index<K,V> down, Index<K,V> right) {
             this.node = node;
@@ -620,12 +622,21 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /**
          * compareAndSet right field
          */
+        /**
+         * CAS更新右边的Index结点
+         *
+         * @param cmp 当前结点的右结点
+         * @param val 希望更新的结点
+         */
         final boolean casRight(Index<K,V> cmp, Index<K,V> val) {
             return UNSAFE.compareAndSwapObject(this, rightOffset, cmp, val);
         }
 
         /**
          * Returns true if the node this indexes has been deleted.
+         *
+         * 判断Node结点是否已经删除.
+         *
          * @return true if indexed node is known to be deleted
          */
         final boolean indexesDeletedNode() {
@@ -636,8 +647,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Tries to CAS newSucc as successor.  To minimize races with
          * unlink that may lose this index node, if the node being
          * indexed is known to be deleted, it doesn't try to link in.
-         * @param succ the expected current successor
-         * @param newSucc the new successor
+         *
+         * CAS插入一个右边结点newSucc.
+         *
+         * @param succ the expected current successor 当前的后继结点
+         * @param newSucc the new successor   新的后继结点
          * @return true if successful
          */
         final boolean link(Index<K,V> succ, Index<K,V> newSucc) {
@@ -650,7 +664,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Tries to CAS right field to skip over apparent successor
          * succ.  Fails (forcing a retraversal by caller) if this node
          * is known to be deleted.
-         * @param succ the expected current successor
+         *
+         * 跳过当前结点的后继结点.
+         *
+         * @param succ the expected current successor 当前的后继结点
          * @return true if successful
          */
         final boolean unlink(Index<K,V> succ) {
