@@ -723,31 +723,45 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * or the base-level header if there is no such node.  Also
      * unlinks indexes to deleted nodes found along the way.  Callers
      * rely on this side-effect of clearing indices to deleted nodes.
-     * @param key the key
+     *
+     * 返回“小于且最接近给定key”的数据结点.
+     * 如果不存在这样的数据结点，则返回底层链表的头结点.
+     * 这个数据结点一定要有上层结点
+     *
+     * @param key the key 待查找的键
+     *
      * @return a predecessor of key
      */
     private Node<K,V> findPredecessor(Object key, Comparator<? super K> cmp) {
-        if (key == null)
+        if (key == null) {
             throw new NullPointerException(); // don't postpone errors
+        }
+
+        /**
+         * 从最上层开始，往右下方向查找
+         */
         for (;;) {
-            for (Index<K,V> q = head, r = q.right, d;;) {
-                if (r != null) {
+            for (Index<K,V> q = head, r = q.right, d;;) { // 从最顶层的head结点开始查找
+                if (r != null) {    // 存在右结点
                     Node<K,V> n = r.node;
                     K k = n.key;
-                    if (n.value == null) {
+                    if (n.value == null) { // 处理结点”懒删除“的情况
                         if (!q.unlink(r))
                             break;           // restart
                         r = q.right;         // reread r
                         continue;
                     }
-                    if (cpr(cmp, key, k) > 0) {
+                    if (cpr(cmp, key, k) > 0) { // key大于k,继续向右查找
                         q = r;
                         r = r.right;
                         continue;
                     }
                 }
-                if ((d = q.down) == null)
-                    return q.node;
+                // 已经到了level1的层
+                if ((d = q.down) == null) {// 不存在下结点，说明q已经是level1链表中的结点了
+                    return q.node;        // 直接返回对应的Node结点
+                }
+                // 转到下一层，继续查找(level-1层)
                 q = d;
                 r = d.right;
             }
@@ -835,8 +849,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @return the value, or null if absent
      */
     private V doGet(Object key) {
-        if (key == null)
+        if (key == null) {
             throw new NullPointerException();
+        }
         Comparator<? super K> cmp = comparator;
         outer: for (;;) {
             for (Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
