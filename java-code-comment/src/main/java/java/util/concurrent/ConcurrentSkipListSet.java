@@ -91,8 +91,7 @@ import java.util.Spliterator;
  * @param <E> the type of elements maintained by this set
  * @since 1.6
  */
-public class ConcurrentSkipListSet<E>
-        extends AbstractSet<E>
+public class ConcurrentSkipListSet<E> extends AbstractSet<E>
         implements NavigableSet<E>, Cloneable, java.io.Serializable {
 
     private static final long serialVersionUID = -2479143111061671589L;
@@ -107,6 +106,8 @@ public class ConcurrentSkipListSet<E>
     /**
      * Constructs a new, empty set that orders its elements according to
      * their {@linkplain Comparable natural ordering}.
+     *
+     * 构造一个空的 ConcurrentSkipListSet，根据key自然顺序排序
      */
     public ConcurrentSkipListSet() {
         m = new ConcurrentSkipListMap<E,Object>();
@@ -115,6 +116,8 @@ public class ConcurrentSkipListSet<E>
     /**
      * Constructs a new, empty set that orders its elements according to
      * the specified comparator.
+     *
+     * 构造一个空的 ConcurrentSkipListSet，根据指定的 comparator 排序
      *
      * @param comparator the comparator that will be used to order this set.
      *        If {@code null}, the {@linkplain Comparable natural
@@ -128,6 +131,8 @@ public class ConcurrentSkipListSet<E>
      * Constructs a new set containing the elements in the specified
      * collection, that orders its elements according to their
      * {@linkplain Comparable natural ordering}.
+     *
+     * 根据参数集合创建一个 ConcurrentSkipListSet，根据key自然顺序排序
      *
      * @param c The elements that will comprise the new set
      * @throws ClassCastException if the elements in {@code c} are
@@ -517,8 +522,7 @@ public class ConcurrentSkipListSet<E>
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
             Class<?> k = ConcurrentSkipListSet.class;
-            mapOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("m"));
+            mapOffset = UNSAFE.objectFieldOffset(k.getDeclaredField("m"));
         } catch (Exception e) {
             throw new Error(e);
         }
