@@ -896,75 +896,100 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Main insertion method.  Adds element if not present, or
      * replaces value if present and onlyIfAbsent is false.
-     * @param key the key
-     * @param value the value that must be associated with key
-     * @param onlyIfAbsent if should not insert if already present
-     * @return the old value, or null if newly inserted
+     *
+     * 插入键值对
+     *
+     * @param key the key 键
+     * @param value the value that must be associated with key  值
+     * @param onlyIfAbsent if should not insert if already present  仅当Key不存在时才进行插入
+     * @return the old value, or null if newly inserted 如果key存在，返回旧value值；否则返回null
      */
     private V doPut(K key, V value, boolean onlyIfAbsent) {
         Node<K,V> z;             // added node
-        if (key == null)
+        if (key == null) {
             throw new NullPointerException();
+        }
         Comparator<? super K> cmp = comparator;
-        outer: for (;;) {
+        outer:
+        for (;;) {
             for (Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
                 if (n != null) {
-                    Object v; int c;
-                    Node<K,V> f = n.next;
-                    if (n != b.next)               // inconsistent read
+                    Object v;
+                    int c;
+                    Node<K,V> f = n.next;  // b -> n -> f
+
+                    if (n != b.next) {// inconsistent read 出现不一致读
                         break;
+                    }
                     if ((v = n.value) == null) {   // n is deleted
                         n.helpDelete(b, f);
                         break;
                     }
-                    if (b.value == null || v == n) // b is deleted
+                    if (b.value == null || v == n) { // b is deleted
                         break;
+                    }
+                    // > 0，说明插入结点大于当前结点，继续向后寻找，直到找到第一个大于插入结点的结点
                     if ((c = cpr(cmp, key, n.key)) > 0) {
                         b = n;
                         n = f;
                         continue;
                     }
+                    // == 0，说明插入结点 key 已存在，CAS 执行 value 更新操作，返回旧值
                     if (c == 0) {
                         if (onlyIfAbsent || n.casValue(v, value)) {
                             @SuppressWarnings("unchecked") V vv = (V)v;
                             return vv;
                         }
+                        // CAS更新失败,则重试
                         break; // restart if lost race to replace value
                     }
                     // else c < 0; fall through
                 }
 
                 z = new Node<K,V>(key, value, n);
-                if (!b.casNext(n, z))
-                    break;         // restart if lost race to append to b
+                if (!b.casNext(n, z)) { // 尝试插入z结点： b -> z -> n
+                    // CAS插入失败，则重试
+                    break; // restart if lost race to append to b
+                }
+                // 跳出最外层循环
                 break outer;
             }
         }
 
-        int rnd = ThreadLocalRandom.nextSecondarySeed();
-        if ((rnd & 0x80000001) == 0) { // test highest and lowest bits
+        int rnd = ThreadLocalRandom.nextSecondarySeed();   // 生成一个随机数种子
+        if ((rnd & 0x80000001) == 0) { // test highest and lowest bits  // 为true表示需要增加层级
+            /**
+             * 以下方法用于创建新层级
+             */
             int level = 1, max;
-            while (((rnd >>>= 1) & 1) != 0)
+
+            while (((rnd >>>= 1) & 1) != 0) { // level表示新的层级,通过下面这个while循环可以确认新的层级数
                 ++level;
+            }
             Index<K,V> idx = null;
             HeadIndex<K,V> h = head;
-            if (level <= (max = h.level)) {
-                for (int i = 1; i <= level; ++i)
+            if (level <= (max = h.level)) { // CASE1: 新层级level没有超过最大层级head.level（head指针指向最高层）
+                // 以“头插法”创建level个Index结点,idx最终指向最高层的Index结点
+                for (int i = 1; i <= level; ++i) {
                     idx = new Index<K,V>(z, idx, null);
-            }
-            else { // try to grow by one level
-                level = max + 1; // hold in array and later pick the one to use
-                @SuppressWarnings("unchecked")Index<K,V>[] idxs =
-                        (Index<K,V>[])new Index<?,?>[level+1];
-                for (int i = 1; i <= level; ++i)
+                }
+            } else { // try to grow by one level // CASE2: 新层级level超过了最大层级head.level
+                level = max + 1; // hold in array and later pick the one to use // 重置level为最大层级+1
+                // 生成一个Index结点数组,idxs[0]不会使用
+                @SuppressWarnings("unchecked")
+                Index<K,V>[] idxs = (Index<K,V>[])new Index<?,?>[level+1];
+                for (int i = 1; i <= level; ++i) {
                     idxs[i] = idx = new Index<K,V>(z, idx, null);
+                }
+
+                // 生成新的HeadIndex结点
                 for (;;) {
                     h = head;
-                    int oldLevel = h.level;
+                    int oldLevel = h.level;   // 原最大层级
                     if (level <= oldLevel) // lost race to add level
                         break;
                     HeadIndex<K,V> newh = h;
-                    Node<K,V> oldbase = h.node;
+                    Node<K,V> oldbase = h.node;  // oldbase指向最底层链表的头结点
                     for (int j = oldLevel+1; j <= level; ++j)
                         newh = new HeadIndex<K,V>(oldbase, newh, idxs[j], j);
                     if (casHead(h, newh)) {
@@ -974,8 +999,12 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     }
                 }
             }
+
+            /**
+             * 以下方法用于链接新层级的各个HeadIndex和Index结点
+             */
             // find insertion points and splice in
-            splice: for (int insertionLevel = level;;) {
+            splice: for (int insertionLevel = level;;) { // 此时level为oldLevel，即原最大层级
                 int j = h.level;
                 for (Index<K,V> q = h, r = q.right, t = idx;;) {
                     if (q == null || t == null)
@@ -998,7 +1027,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     }
 
                     if (j == insertionLevel) {
-                        if (!q.link(r, t))
+                        if (!q.link(r, t))         // 在q和r之间插入t，即从 q -> r 变成 q -> t -> r
                             break; // restart
                         if (t.node.value == null) {
                             findNode(key);
@@ -1666,8 +1695,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if the specified key or value is null
      */
     public V put(K key, V value) {
-        if (value == null)
+        if (value == null) {
             throw new NullPointerException();
+        }
         return doPut(key, value, false);
     }
 
