@@ -1069,37 +1069,47 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @return the node, or null if not found
      */
     final V doRemove(Object key, Object value) {
-        if (key == null)
+        if (key == null) {
             throw new NullPointerException();
+        }
         Comparator<? super K> cmp = comparator;
-        outer: for (;;) {
+        outer:
+        for (;;) {
             for (Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
-                Object v; int c;
-                if (n == null)
+                Object v;
+                int c;
+                if (n == null) {
                     break outer;
-                Node<K,V> f = n.next;
+                }
+                Node<K,V> f = n.next;   // b -> n -> f
                 if (n != b.next)                    // inconsistent read
                     break;
                 if ((v = n.value) == null) {        // n is deleted
                     n.helpDelete(b, f);
                     break;
                 }
-                if (b.value == null || v == n)      // b is deleted
+                if (b.value == null || v == n) {// b is deleted
                     break;
-                if ((c = cpr(cmp, key, n.key)) < 0)
+                }
+                // < 0，说明要删除的结点不存在
+                if ((c = cpr(cmp, key, n.key)) < 0) {
                     break outer;
+                }
+                // c > 0，继续向后查找结点
                 if (c > 0) {
                     b = n;
                     n = f;
                     continue;
                 }
-                if (value != null && !value.equals(v))
+                if (value != null && !value.equals(v)) {
                     break outer;
-                if (!n.casValue(v, null))
+                }
+                if (!n.casValue(v, null)) {
                     break;
-                if (!n.appendMarker(f) || !b.casNext(n, f))
+                }
+                if (!n.appendMarker(f) || !b.casNext(n, f)) {
                     findNode(key);                  // retry via findNode
-                else {
+                } else {
                     findPredecessor(key, cmp);      // clean index
                     if (head.right == null)
                         tryReduceLevel();
