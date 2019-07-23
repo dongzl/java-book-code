@@ -855,24 +855,35 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         Comparator<? super K> cmp = comparator;
         outer: for (;;) {
             for (Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
-                Object v; int c;
-                if (n == null)
+                Object v;
+                int c;
+                if (n == null) {
+                    //中断所有循环操作
                     break outer;
-                Node<K,V> f = n.next;
-                if (n != b.next)                // inconsistent read
-                    break;
-                if ((v = n.value) == null) {    // n is deleted
-                    n.helpDelete(b, f);
+                }
+                Node<K,V> f = n.next; // b -> n -> f
+
+                if (n != b.next) {// inconsistent read 不一致性读操作
+                    // 中断内部循环
                     break;
                 }
-                if (b.value == null || v == n)  // b is deleted
+                if ((v = n.value) == null) {    // n is deleted
+                    n.helpDelete(b, f);
+                    // 中断内部循环
                     break;
+                }
+                if (b.value == null || v == n) {// b is deleted
+                    // 中断内部循环
+                    break;
+                }
                 if ((c = cpr(cmp, key, n.key)) == 0) {
                     @SuppressWarnings("unchecked") V vv = (V)v;
                     return vv;
                 }
-                if (c < 0)
+                if (c < 0) {
+                    //中断所有循环操作
                     break outer;
+                }
                 b = n;
                 n = f;
             }
