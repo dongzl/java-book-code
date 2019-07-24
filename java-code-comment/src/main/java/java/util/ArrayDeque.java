@@ -108,6 +108,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      *  4、deque 还没有填充元素的位置存储的都是 null；
      *  5、非 private 访问限制，以便内部类访问。
      *
+     * 
      */
     transient Object[] elements; // non-private to simplify nested class access
 
