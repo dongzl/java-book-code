@@ -1,5 +1,3 @@
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -11,7 +9,7 @@ import java.util.function.Predicate;
  * @description
  * @date 2019-07-26 09:48
  */
-public class GuardedObjectV2<T> {
+public class GuardedObjectV1<T> {
 
     // 受保护的对象
     T obj;
@@ -20,22 +18,7 @@ public class GuardedObjectV2<T> {
 
     final Condition done = lock.newCondition();
 
-    final int timeout = 2;
-
-    final static Map<Object, GuardedObjectV2> gos = new ConcurrentHashMap<>();
-
-    static <K> GuardedObjectV2 create(K key) {
-        GuardedObjectV2 go = new GuardedObjectV2();
-        gos.put(key, go);
-        return go;
-    }
-
-    static <K, T> void fireEvent(K key, T obj) {
-        GuardedObjectV2 go = gos.get(key);
-        if (go != null) {
-            go.onChange(obj);
-        }
-    }
+    final int timeout = 1;
 
     // 受保护的对象
     T get(Predicate<T> p) {
