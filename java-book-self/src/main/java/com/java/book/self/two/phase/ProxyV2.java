@@ -1,5 +1,10 @@
 package com.java.book.self.two.phase;
 
+/**
+ * @description
+ * @author dongzonglei
+ * @date 2019-07-28 20:40
+ */
 public class ProxyV2 {
     boolean started = false;
     // 采集线程

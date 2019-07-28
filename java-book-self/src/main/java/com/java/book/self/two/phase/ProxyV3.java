@@ -1,5 +1,10 @@
 package com.java.book.self.two.phase;
 
+/**
+ * @description
+ * @author dongzonglei
+ * @date 2019-07-28 20:40
+ */
 public class ProxyV3 {
     // 线程终止标志位
     volatile boolean terminated = false;
