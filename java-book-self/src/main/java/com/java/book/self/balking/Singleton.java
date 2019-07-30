@@ -7,15 +7,20 @@ package com.java.book.self.balking;
  */
 public class Singleton {
 
-    private static Singleton singleton;
+    // 需要volatile关键字，new Singleton() 可能多条指令完成，防止指令重排
+    private static volatile Singleton singleton;
 
     private Singleton() {
 
     }
 
-    public synchronized static Singleton getInstance() {
+    public static Singleton getInstance() {
         if (singleton == null) {
-            singleton = new Singleton();
+            synchronized (Singleton.class) {
+                if (singleton == null) {
+                    singleton = new Singleton();
+                }
+            }
         }
 
         return singleton;
