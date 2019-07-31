@@ -1,4 +1,4 @@
-package com.java.book.self.thread_per_message;
+package com.java.book.self.worker_thread;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
