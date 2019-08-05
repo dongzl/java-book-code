@@ -53,7 +53,7 @@ public class NettyTest {
             cause.printStackTrace();
             ctx.close();
         }
-        
+
         // 处理读完成事件
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
