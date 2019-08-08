@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
+ * HikariCP 测试
  * @author dongzonglei
  * @description
  * @date 2019-08-07 19:42
