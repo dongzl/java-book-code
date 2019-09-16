@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 
 /**
  * @author dongzonglei
- * @description
+ * @description https://blog.csdn.net/chinabestchina/article/details/78956703
  * @date 2019-09-16 11:14
  */
 public class ZookeeperSimpleDistributedQueueMain {
