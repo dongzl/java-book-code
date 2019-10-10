@@ -111,6 +111,16 @@
             <version>1.9.13</version>
         </dependency>
         <!-- Jackson end-->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.11.4</version>
+        </dependency>
     </dependencies>
 
     <build>
