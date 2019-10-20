@@ -33,7 +33,7 @@ public class RedissonTest {
         RedissonRedLock redLock = new RedissonRedLock(rLock, rLock1, rLock2);
         try {
             if (!redLock.tryLock()) {
-                
+
             }
         } catch (Exception e) {
             e.printStackTrace();
