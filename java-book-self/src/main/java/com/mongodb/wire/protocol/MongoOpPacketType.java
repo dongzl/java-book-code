@@ -26,13 +26,13 @@ import java.util.Map;
 /**
  * OP Code for MongoDB
  * 
- * @see <a href="https://docs.mongodb.com/manual/reference/mongodb-wire-protocol/#wire-op-reply">MongoDB Wire Protocol</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/mongodb-wire-protocol">MongoDB Wire Protocol</a>
  * 
  * @author dongzonglei 
  */
 @RequiredArgsConstructor
 @Getter
-public enum MongoDBOpCode {
+public enum MongoOperationPacketType {
 
     /**
      * Reply to a client request. responseTo is set.
@@ -79,9 +79,9 @@ public enum MongoDBOpCode {
      */
     OP_MSG(2013);
     
-    private static final Map<Integer, MongoDBOpCode> MONGODB_OP_CODE_CACHE = new HashMap<Integer, MongoDBOpCode>() {
+    private static final Map<Integer, MongoOperationPacketType> MONGODB_OPERATION_CODE_CACHE = new HashMap<Integer, MongoOperationPacketType>() {
         {
-            for (MongoDBOpCode each : MongoDBOpCode.values()) {
+            for (MongoOperationPacketType each : MongoOperationPacketType.values()) {
                 this.put(each.value, each);
             }
         }
@@ -95,8 +95,8 @@ public enum MongoDBOpCode {
      * @param value integer value
      * @return MongoDB OP code enum
      */
-    public static MongoDBOpCode valueOf(final int value) {
-        MongoDBOpCode result = MONGODB_OP_CODE_CACHE.get(value);
+    public static MongoOperationPacketType valueOf(final int value) {
+        MongoOperationPacketType result = MONGODB_OPERATION_CODE_CACHE.get(value);
         if (null == result) {
             throw new IllegalArgumentException(String.format("Cannot find '%s' in MongoDB OP code", value));
         }
