@@ -200,10 +200,13 @@ public class EtcdService {
 //            Thread.sleep(3000);
 //            System.out.println("3." + etcdService.get("test_ephemeral"));
             
-            long leaseId = getLeaseClient().grant(10).get().getID();
+            //long leaseId = getLeaseClient().grant(10).get().getID();
             //long leaseId1 = getLeaseClient().grant(8).get().getID();
-            etcdService.lock("test_lock11", leaseId);
+            //etcdService.lock("test_lock11", leaseId);
             //etcdService.lock("test_lock11", leaseId1);
+            
+            System.out.println(getEtclClient().getKVClient());
+            System.out.println(getEtclClient().getKVClient());
             
             getEtclClient().close();
         } catch (Exception e) {
