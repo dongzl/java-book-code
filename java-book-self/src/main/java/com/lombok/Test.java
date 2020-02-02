@@ -8,6 +8,6 @@ package com.lombok;
 public class Test {
     
     public static void main(String args[]) throws Exception {
-        User user = User.of();
+        //User user = User.of();
     }
 }
