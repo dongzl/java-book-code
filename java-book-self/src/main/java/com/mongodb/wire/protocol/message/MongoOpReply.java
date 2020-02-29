@@ -1,4 +1,4 @@
-package com.mongodb.wire.protocol;
+package com.mongodb.wire.protocol.message;
 
 import com.mongodb.wire.protocol.message.MessageHeader;
 import lombok.Getter;

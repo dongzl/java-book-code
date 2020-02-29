@@ -142,6 +142,16 @@
             <artifactId>jetcd-core</artifactId>
             <version>0.4.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>1.1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>3.2.3</version>
+        </dependency>
     </dependencies>
 
     <build>

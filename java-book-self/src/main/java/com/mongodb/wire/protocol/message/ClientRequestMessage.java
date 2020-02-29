@@ -1,4 +1,4 @@
-package com.mongodb.wire.protocol;
+package com.mongodb.wire.protocol.message;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,10 @@ import lombok.Setter;
 @Setter
 @Getter
 public class ClientRequestMessage {
-    
+
+    /**
+     * standard message header
+     */
     private MessageHeader messageHeader;
     
 }

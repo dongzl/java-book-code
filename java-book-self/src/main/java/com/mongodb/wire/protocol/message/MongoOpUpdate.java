@@ -1,4 +1,4 @@
-package com.mongodb.wire.protocol;
+package com.mongodb.wire.protocol.message;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,17 +13,12 @@ import org.bson.Document;
 @Getter
 @Setter
 @ToString
-public final class MongoOpUpdate {
+public final class MongoOpUpdate extends ClientRequestMessage {
 
     /**
      * 0 - reserved for future use
      */
     private static final int ZERO = 0;
-
-    /**
-     * standard message header
-     */
-    private MessageHeader header;
 
     /**
      * "dbname.collectionname"

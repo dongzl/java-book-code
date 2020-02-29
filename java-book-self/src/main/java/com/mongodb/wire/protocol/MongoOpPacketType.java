@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @RequiredArgsConstructor
 @Getter
-public enum MongoOperationPacketType {
+public enum MongoOpPacketType {
 
     /**
      * Reply to a client request. responseTo is set.
@@ -79,9 +79,9 @@ public enum MongoOperationPacketType {
      */
     OP_MSG(2013);
     
-    private static final Map<Integer, MongoOperationPacketType> MONGODB_OPERATION_CODE_CACHE = new HashMap<Integer, MongoOperationPacketType>() {
+    private static final Map<Integer, MongoOpPacketType> MONGODB_OP_CODE_CACHE = new HashMap<Integer, MongoOpPacketType>() {
         {
-            for (MongoOperationPacketType each : MongoOperationPacketType.values()) {
+            for (MongoOpPacketType each : MongoOpPacketType.values()) {
                 this.put(each.value, each);
             }
         }
@@ -95,8 +95,8 @@ public enum MongoOperationPacketType {
      * @param value integer value
      * @return MongoDB OP code enum
      */
-    public static MongoOperationPacketType valueOf(final int value) {
-        MongoOperationPacketType result = MONGODB_OPERATION_CODE_CACHE.get(value);
+    public static MongoOpPacketType valueOf(final int value) {
+        MongoOpPacketType result = MONGODB_OP_CODE_CACHE.get(value);
         if (null == result) {
             throw new IllegalArgumentException(String.format("Cannot find '%s' in MongoDB OP code", value));
         }

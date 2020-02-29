@@ -1,4 +1,4 @@
-package com.mongodb.wire.protocol;
+package com.mongodb.wire.protocol.message;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,12 +12,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public final class MongoOpMsg {
-
-    /**
-     * standard message header
-     */
-    private MessageHeader header;
+public final class MongoOpMsg extends ClientRequestMessage {
 
     /**
      * data sections
