@@ -1,3 +1,6 @@
+import sun.misc.Unsafe;
+
+import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 
 /**
@@ -8,6 +11,8 @@ import java.util.ArrayDeque;
 public class ArrayDequeTest {
 
     public static void main(String args[]) throws Exception {
+        //Unsafe
+        //ByteBuffer
         ArrayDeque<String> deque = new ArrayDeque();
         deque.add("a");
         deque.add("b");

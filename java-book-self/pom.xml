@@ -172,6 +172,29 @@
             <artifactId>lucene-core</artifactId>
             <version>4.0.0</version>
         </dependency>
+        <!--实现对视频文件读取-->
+        <dependency>
+            <groupId>org.mp4parser</groupId>
+            <artifactId>isoparser</artifactId>
+            <version>1.9.41</version>
+        </dependency>
+        <!--实现对ffmpeg的操作-->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>ffmpeg</artifactId>
+            <version>4.2.2-1.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>ffmpeg-platform</artifactId>
+            <version>4.2.2-1.5.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>msgpack</artifactId>
+            <version>0.6.12</version>
+        </dependency>
     </dependencies>
 
     <build>
