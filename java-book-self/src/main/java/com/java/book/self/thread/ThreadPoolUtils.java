@@ -8,18 +8,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 线程池工具类
  * Created by dongzonglei on 2016/11/10.
  */
 public final class ThreadPoolUtils {
 
     /**
-     * 线程池线程数
      */
     private static int THREAD_POOL_SIZE = 10;
 
     /**
-     * 创建线程池
      */
     private static final ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 

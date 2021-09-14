@@ -6,16 +6,16 @@
 public class PassByValueExample {
 
     public static void main(String args[]) throws Exception {
-        Dog dog = new Dog("A");
+        Dog1 dog = new Dog1("A");
         System.out.println(dog.getObjectAddress()); // Dog@4554617c
         func(dog);
         System.out.println(dog.getObjectAddress()); // Dog@4554617c
         System.out.println(dog.getName());          // A
     }
 
-    private static void func(Dog dog) {
+    private static void func(Dog1 dog) {
         System.out.println(dog.getObjectAddress()); // Dog@4554617c
-        dog = new Dog("B");
+        dog = new Dog1("B");
         System.out.println(dog.getObjectAddress()); // Dog@74a14482
         System.out.println(dog.getName());          // B
     }
